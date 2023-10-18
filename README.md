@@ -18,13 +18,64 @@ cmsrel CMSSW_10_6_30
 cd CMSSW_10_6_30/src
 cmsenv
 git cms-merge-topic -u ram1123:CMSSW_10_6_30_HHWWgg_nanoV9
+./PhysicsTools/NanoTuples/scripts/install_onnxruntime.sh
+scramv1 b -j 8
+# cd $CMSSW_BASE/../
+# cmsRun HIG-RunIISummer20UL18NanoAODv9-02546_1_cfg.py
 ```
 
 ## Get the official nanoAOD production for the UL18 campaign
 
+
 ```bash
 cd ${CMSSW_BASE}/src
-cmsDriver.py  --python_filename HIG-RunIISummer20UL18NanoAODv9-02546_1_cfg_testv1.py --eventcontent NANOAODSIM --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC  --customise Configuration/DataProcessing/Utils.addMonitoring --datatier NANOAODSIM --fileout file:HIG-RunIISummer20UL18NanoAODv9-02546_testv1.root --conditions 106X_upgrade2018_realistic_v16_L1v1 --step NANO --filein "dbs:/GluGluToRadionToHHTo2G2WTo2G4Q_M-1000_TuneCP5_PSWeights_narrow_13TeV-madgraph-pythia8/RunIISummer20UL18MiniAODv2-106X_upgrade2018_realistic_v16_L1v1-v2/MINIAODSIM" --era Run2_2018,run2_nanoAOD_106Xv2 --no_exec --mc -n 100
+
+# UL18: Ref: https://cms-pdmv.cern.ch/mcm/requests?prepid=HIG-RunIISummer20UL18NanoAODv9-02546&page=0&shown=127
+cmsDriver.py  --python_filename HIG-RunIISummer20UL18NanoAODv9-02546_1_cfg.py --eventcontent NANOAODSIM --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC  --customise Configuration/DataProcessing/Utils.addMonitoring --datatier NANOAODSIM --fileout file:HIG-RunIISummer20UL18NanoAODv9-02546.root --conditions 106X_upgrade2018_realistic_v16_L1v1 --step NANO --filein "dbs:/GluGluToRadionToHHTo2G2WTo2G4Q_M-1000_TuneCP5_PSWeights_narrow_13TeV-madgraph-pythia8/RunIISummer20UL18MiniAODv2-106X_upgrade2018_realistic_v16_L1v1-v2/MINIAODSIM" --era Run2_2018,run2_nanoAOD_106Xv2 --no_exec --mc -n 100
+
+# UL17: Ref: https://cms-pdmv.cern.ch/mcm/requests?prepid=HIG-RunIISummer20UL17NanoAODv9-02407&page=0&shown=127
+cmsDriver.py  --python_filename HIG-RunIISummer20UL17NanoAODv9-02407_1_cfg.py --eventcontent NANOAODSIM --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC --customise Configuration/DataProcessing/Utils.addMonitoring --datatier NANOAODSIM --fileout file:HIG-RunIISummer20UL17NanoAODv9-02407.root --conditions 106X_mc2017_realistic_v9 --step NANO --filein "dbs:/GluGluToRadionToHHTo2G2WTo2G4Q_M-1000_TuneCP5_PSWeights_narrow_13TeV-madgraph-pythia8/RunIISummer20UL17MiniAODv2-106X_mc2017_realistic_v9-v2/MINIAODSIM" --era Run2_2017,run2_nanoAOD_106Xv2 --no_exec --mc -n 100
+
+# UL16APV: Ref: https://cms-pdmv.cern.ch/mcm/requests?prepid=HIG-RunIISummer20UL16NanoAODAPVv9-01726&page=0&shown=127
+cmsDriver.py  --python_filename HIG-RunIISummer20UL16NanoAODAPVv9-01726_1_cfg.py --eventcontent NANOEDMAODSIM --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC --customise Configuration/DataProcessing/Utils.addMonitoring --datatier NANOAODSIM --fileout file:HIG-RunIISummer20UL16NanoAODAPVv9-01726.root --conditions 106X_mcRun2_asymptotic_preVFP_v11 --step NANO --filein "dbs:/GluGluToRadionToHHTo2G2WTo2G4Q_M-1000_TuneCP5_PSWeights_narrow_13TeV-madgraph-pythia8/RunIISummer20UL16MiniAODAPVv2-106X_mcRun2_asymptotic_preVFP_v11-v2/MINIAODSIM" --era Run2_2016_HIPM,run2_nanoAOD_106Xv2 --no_exec --mc -n 110 ;
+
+# UL16: Ref: https://cms-pdmv.cern.ch/mcm/requests?prepid=HIG-RunIISummer20UL16NanoAODv9-02412&page=0&shown=127
+cmsDriver.py  --python_filename HIG-RunIISummer20UL16NanoAODv9-02412_1_cfg.py --eventcontent NANOEDMAODSIM --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC --customise Configuration/DataProcessing/Utils.addMonitoring --datatier NANOAODSIM --fileout file:HIG-RunIISummer20UL16NanoAODv9-02412.root --conditions 106X_mcRun2_asymptotic_v17 --step NANO --filein "dbs:/GluGluToRadionToHHTo2G2WTo2G4Q_M-1000_TuneCP5_PSWeights_narrow_13TeV-madgraph-pythia8/RunIISummer20UL16MiniAODv2-106X_mcRun2_asymptotic_v17-v2/MINIAODSIM" --era Run2_2016,run2_nanoAOD_106Xv2 --no_exec --mc -n 110 ;
+```
+
+## Add input arguments to the cmssw config file
+
+```python
+from FWCore.ParameterSet.VarParsing import VarParsing
+options = VarParsing ('analysis')
+options.register ('nEvents',
+                    -1,
+                    VarParsing.multiplicity.singleton,
+                    VarParsing.varType.int,
+                    "max number of events")
+options.register ('inputFile',
+                    'test.root',
+                    VarParsing.multiplicity.singleton,
+                    VarParsing.varType.string,
+                    "input file")
+options.parseArguments()
+```
+
+Remove the hardcoded input file and number of events from the config file and replace them with the following:
+
+```python
+process.maxEvents = cms.untracked.PSet(
+    input = cms.untracked.int32(options.nEvents)
+)
+```
+
+and
+
+```python
+process.source = cms.Source("PoolSource",
+    fileNames = cms.untracked.vstring(options.inputFile)
+    secondaryFileNames = cms.untracked.vstring()
+)
 ```
 
 
@@ -50,7 +101,7 @@ scram b -j8
 ```bash
 # cmsDriver.py test_nanoTuples_mc2018 -n 1000 --mc --eventcontent NANOAODSIM --datatier NANOAODSIM --conditions 106X_upgrade2018_realistic_v16_L1v1 --step NANO --nThreads 1 --era Run2_2018,run2_nanoAOD_106Xv2 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC --filein /store/mc/RunIISummer20UL18MiniAODv2/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/MINIAODSIM/106X_upgrade2018_realistic_v16_L1v1-v1/00000/004EF875-ACBB-FE45-B86B-EAF83448CE62.root --fileout file:nano_mc2018.root --customise_commands "process.options.wantSummary = cms.untracked.bool(True)" >& test_mc2018.log &
 
-# cmsDriver.py  --python_filename HIG-RunIISummer20UL18NanoAODv9-02546_1_cfg_testv1.py --eventcontent NANOAODSIM --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC --customise Configuration/DataProcessing/Utils.addMonitoring --datatier NANOAODSIM --fileout file:HIG-RunIISummer20UL18NanoAODv9-02546_testv1.root --conditions 106X_upgrade2018_realistic_v16_L1v1 --step NANO --filein "dbs:/GluGluToRadionToHHTo2G2WTo2G4Q_M-1000_TuneCP5_PSWeights_narrow_13TeV-madgraph-pythia8/RunIISummer20UL18MiniAODv2-106X_upgrade2018_realistic_v16_L1v1-v2/MINIAODSIM" --era Run2_2018,run2_nanoAOD_106Xv2 --no_exec --mc -n $EVENTS || exit $? ;
+# cmsDriver.py  --python_filename HIG-RunIISummer20UL18NanoAODv9-02546_1_cfg_testv1.py --eventcontent NANOAODSIM --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC --customise Configuration/DataProcessing/Utils.addMonitoring --datatier NANOAODSIM --fileout file:HIG-RunIISummer20UL18NanoAODv9-02546_testv1.root --conditions 106X_upgrade2018_realistic_v16_L1v1 --step NANO --filein "dbs:/GluGluToRadionToHHTo2G2WTo2G4Q_M-1000_TuneCP5_PSWeights_narrow_13TeV-madgraph-pythia8/RunIISummer20UL18MiniAODv2-106X_upgrade2018_realistic_v16_L1v1-v2/MINIAODSIM" --era Run2_2018,run2_nanoAOD_106Xv2 --no_exec --mc -n 110 ;
 
 cmsDriver.py test_nanoTuples_mc2018 -n 100 --mc --eventcontent NANOAODSIM --datatier NANOAODSIM --conditions 106X_upgrade2018_realistic_v16_L1v1 --step NANO --nThreads 1 --era Run2_2018,run2_nanoAOD_106Xv2 --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC  --filein "dbs:/GluGluToRadionToHHTo2G2WTo2G4Q_M-1000_TuneCP5_PSWeights_narrow_13TeV-madgraph-pythia8/RunIISummer20UL18MiniAODv2-106X_upgrade2018_realistic_v16_L1v1-v2/MINIAODSIM" --fileout file:nano_mc2018.root --customise_commands "process.options.wantSummary = cms.untracked.bool(True)" >& test_mc2018.log &
 
