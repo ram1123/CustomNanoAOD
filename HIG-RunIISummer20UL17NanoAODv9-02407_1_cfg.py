@@ -2,13 +2,13 @@
 # using:
 # Revision: 1.19
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v
-# with command line options: --python_filename HIG-RunIISummer20UL18NanoAODv9-02546_1_cfg.py --eventcontent NANOAODSIM --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC --customise Configuration/DataProcessing/Utils.addMonitoring --datatier NANOAODSIM --fileout file:HIG-RunIISummer20UL18NanoAODv9-02546.root --conditions 106X_upgrade2018_realistic_v16_L1v1 --step NANO --filein dbs:/GluGluToRadionToHHTo2G2WTo2G4Q_M-1000_TuneCP5_PSWeights_narrow_13TeV-madgraph-pythia8/RunIISummer20UL18MiniAODv2-106X_upgrade2018_realistic_v16_L1v1-v2/MINIAODSIM --era Run2_2018,run2_nanoAOD_106Xv2 --no_exec --mc -n 100
+# with command line options: --python_filename HIG-RunIISummer20UL17NanoAODv9-02407_1_cfg.py --eventcontent NANOAODSIM --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC --customise Configuration/DataProcessing/Utils.addMonitoring --datatier NANOAODSIM --fileout file:HIG-RunIISummer20UL17NanoAODv9-02407.root --conditions 106X_mc2017_realistic_v9 --step NANO --filein dbs:/GluGluToRadionToHHTo2G2WTo2G4Q_M-1000_TuneCP5_PSWeights_narrow_13TeV-madgraph-pythia8/RunIISummer20UL17MiniAODv2-106X_mc2017_realistic_v9-v2/MINIAODSIM --era Run2_2017,run2_nanoAOD_106Xv2 --no_exec --mc -n 100
 import FWCore.ParameterSet.Config as cms
 
-from Configuration.Eras.Era_Run2_2018_cff import Run2_2018
+from Configuration.Eras.Era_Run2_2017_cff import Run2_2017
 from Configuration.Eras.Modifier_run2_nanoAOD_106Xv2_cff import run2_nanoAOD_106Xv2
 
-process = cms.Process('NANO',Run2_2018,run2_nanoAOD_106Xv2)
+process = cms.Process('NANO',Run2_2017,run2_nanoAOD_106Xv2)
 
 from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ('analysis')
@@ -18,7 +18,7 @@ options.register ('nEvents',
                     VarParsing.varType.int,
                     "max number of events")
 options.register ('inputFile',
-                    '/store/mc/RunIISummer20UL18MiniAODv2/GluGluToRadionToHHTo2G2WTo2G4Q_M-1000_TuneCP5_PSWeights_narrow_13TeV-madgraph-pythia8/MINIAODSIM/106X_upgrade2018_realistic_v16_L1v1-v2/50000/04D3FBF0-A539-5143-9A1C-8D42A1D54C88.root',
+                    '/store/mc/RunIISummer20UL17MiniAODv2/GluGluToRadionToHHTo2G2WTo2G4Q_M-1000_TuneCP5_PSWeights_narrow_13TeV-madgraph-pythia8/MINIAODSIM/106X_mc2017_realistic_v9-v2/50000/031BCBD9-52B1-A246-8AF2-2179C756F6D9.root',
                     VarParsing.multiplicity.singleton,
                     VarParsing.varType.string,
                     "input file")
@@ -52,7 +52,7 @@ process.options = cms.untracked.PSet(
 
 # Production Info
 process.configurationMetadata = cms.untracked.PSet(
-    annotation = cms.untracked.string('--python_filename nevts:-1'),
+    annotation = cms.untracked.string('--python_filename nevts:100'),
     name = cms.untracked.string('Applications'),
     version = cms.untracked.string('$Revision: 1.19 $')
 )
@@ -66,7 +66,7 @@ process.NANOAODSIMoutput = cms.OutputModule("NanoAODOutputModule",
         dataTier = cms.untracked.string('NANOAODSIM'),
         filterName = cms.untracked.string('')
     ),
-    fileName = cms.untracked.string('file:HIG-RunIISummer20UL18NanoAODv9-02546.root'),
+    fileName = cms.untracked.string('file:HIG-RunIISummer20UL17NanoAODv9-02407.root'),
     outputCommands = process.NANOAODSIMEventContent.outputCommands
 )
 
@@ -74,7 +74,7 @@ process.NANOAODSIMoutput = cms.OutputModule("NanoAODOutputModule",
 
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v16_L1v1', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '106X_mc2017_realistic_v9', '')
 
 # Path and EndPath definitions
 process.nanoAOD_step = cms.Path(process.nanoSequenceMC)

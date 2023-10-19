@@ -31,9 +31,9 @@ def compare_root_files(file1_path, file2_path):
     file2.Close()
 
 # Paths to the ROOT files you want to compare
-file1_path = "/afs/cern.ch/user/r/rasharma/work/doubleHiggs/CustomNanoAOD/HIG-RunIISummer20UL18NanoAODv9-02546.root"
+file1_path = "../HIG-RunIISummer20UL18NanoAODv9-02546_testv1.root"
 # file2_path = "/afs/cern.ch/user/r/rasharma/work/doubleHiggs/CustomNanoAOD/New_30/CMSSW_10_6_30/src/HIG-RunIISummer20UL18NanoAODv9-02546_testv1.root"
-file2_path = "/afs/cern.ch/user/r/rasharma/work/doubleHiggs/CustomNanoAOD/New_30/CMSSW_10_6_30/src/HIG-RunIISummer20UL18NanoAODv9-02546_testv1_WithNewPhotonVars.root"
+file2_path = "/afs/cern.ch/user/r/rasharma/work/doubleHiggs/CustomNanoAOD/CMSSW_10_6_26/src/HIG-RunIISummer20UL18NanoAODv9-02546.root"
 
 # Compare the files
 compare_root_files(file1_path, file2_path)
