@@ -20,15 +20,50 @@ cmsenv
 git cms-merge-topic -u ram1123:CMSSW_10_6_30_HHWWgg_nanoV9
 ./PhysicsTools/NanoTuples/scripts/install_onnxruntime.sh
 scramv1 b -j 8
-# cd $CMSSW_BASE/../
-# cmsRun HIG-RunIISummer20UL18NanoAODv9-02546_1_cfg.py
+cd $CMSSW_BASE/../
 ```
 
-## Get the official nanoAOD production for the UL18 campaign
+## Run custom nanoAOD production
+
+```bash
+voms-proxy-init --voms cms --valid 168:00
+
+cd ${CMSSW_BASE}/src
+cmsenv
+cd ../../
+
+# For 2018
+cmsRun HIG-RunIISummer20UL18NanoAODv9-02546_1_cfg.py
+
+# For 2017
+cmsRun HIG-RunIISummer20UL17NanoAODv9-02407_1_cfg.py
+
+# For 2016APV
+cmsRun HIG-RunIISummer20UL16NanoAODAPVv9-01726_1_cfg.py
+
+# For 2016
+cmsRun HIG-RunIISummer20UL16NanoAODv9-02412_1_cfg.py
+```
+
+## Condor jobs instruction
+
+Information: Use  following command to run the config file with specific root file and number of events.
+
+```
+cmsRun HIG-RunIISummer20UL18NanoAODv9-02546_1_cfg.py nEvents=-1 inputFile=/store/mc/RunIISummer20UL18MiniAODv2/GluGluToRadionToHHTo2G2WTo2G4Q_M-1000_TuneCP5_PSWeights_narrow_13TeV-madgraph-pythia8/MINIAODSIM/106X_upgrade2018_realistic_v16_L1v1-v2/50000/04D3FBF0-A539-5143-9A1C-8D42A1D54C88.root
+```
+
+# Details
+
+## Get the official nanoAOD production config files
 
 
 ```bash
 cd ${CMSSW_BASE}/src
+cmsenv
+cd -
+
+voms-proxy-init --voms cms --valid 168:00
 
 # UL18: Ref: https://cms-pdmv.cern.ch/mcm/requests?prepid=HIG-RunIISummer20UL18NanoAODv9-02546&page=0&shown=127
 cmsDriver.py  --python_filename HIG-RunIISummer20UL18NanoAODv9-02546_1_cfg.py --eventcontent NANOAODSIM --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC  --customise Configuration/DataProcessing/Utils.addMonitoring --datatier NANOAODSIM --fileout file:HIG-RunIISummer20UL18NanoAODv9-02546.root --conditions 106X_upgrade2018_realistic_v16_L1v1 --step NANO --filein "dbs:/GluGluToRadionToHHTo2G2WTo2G4Q_M-1000_TuneCP5_PSWeights_narrow_13TeV-madgraph-pythia8/RunIISummer20UL18MiniAODv2-106X_upgrade2018_realistic_v16_L1v1-v2/MINIAODSIM" --era Run2_2018,run2_nanoAOD_106Xv2 --no_exec --mc -n 100
