@@ -1,3 +1,7 @@
 CMSSW_10_6_26/
 CMSSW_10_6_30/
 *.root
+*.err
+*.stdout
+*.pyc
+*.jdl

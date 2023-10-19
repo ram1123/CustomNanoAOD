@@ -12,16 +12,6 @@ process = cms.Process('NANO',Run2_2018,run2_nanoAOD_106Xv2)
 
 from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ('analysis')
-options.register ('nEvents',
-                    -1,
-                    VarParsing.multiplicity.singleton,
-                    VarParsing.varType.int,
-                    "max number of events")
-options.register ('inputFile',
-                    '/store/mc/RunIISummer20UL18MiniAODv2/GluGluToRadionToHHTo2G2WTo2G4Q_M-1000_TuneCP5_PSWeights_narrow_13TeV-madgraph-pythia8/MINIAODSIM/106X_upgrade2018_realistic_v16_L1v1-v2/50000/04D3FBF0-A539-5143-9A1C-8D42A1D54C88.root',
-                    VarParsing.multiplicity.singleton,
-                    VarParsing.varType.string,
-                    "input file")
 options.parseArguments()
 
 # import of standard configurations
@@ -37,12 +27,12 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(options.nEvents)
+    input = cms.untracked.int32(options.maxEvents)
 )
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring(options.inputFile),
+    fileNames = cms.untracked.vstring(options.inputFiles),
     secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -66,7 +56,7 @@ process.NANOAODSIMoutput = cms.OutputModule("NanoAODOutputModule",
         dataTier = cms.untracked.string('NANOAODSIM'),
         filterName = cms.untracked.string('')
     ),
-    fileName = cms.untracked.string('file:HIG-RunIISummer20UL18NanoAODv9-02546.root'),
+    fileName = cms.untracked.string('file:'+options.outputFile),
     outputCommands = process.NANOAODSIMEventContent.outputCommands
 )
 

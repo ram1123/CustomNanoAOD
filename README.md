@@ -50,7 +50,7 @@ cmsRun HIG-RunIISummer20UL16NanoAODv9-02412_1_cfg.py
 Information: Use  following command to run the config file with specific root file and number of events.
 
 ```
-cmsRun HIG-RunIISummer20UL18NanoAODv9-02546_1_cfg.py nEvents=-1 inputFile=/store/mc/RunIISummer20UL18MiniAODv2/GluGluToRadionToHHTo2G2WTo2G4Q_M-1000_TuneCP5_PSWeights_narrow_13TeV-madgraph-pythia8/MINIAODSIM/106X_upgrade2018_realistic_v16_L1v1-v2/50000/04D3FBF0-A539-5143-9A1C-8D42A1D54C88.root
+cmsRun HIG-RunIISummer20UL18NanoAODv9-02546_1_cfg.py maxEvents=-1 inputFiles=/store/mc/RunIISummer20UL18MiniAODv2/GluGluToRadionToHHTo2G2WTo2G4Q_M-1000_TuneCP5_PSWeights_narrow_13TeV-madgraph-pythia8/MINIAODSIM/106X_upgrade2018_realistic_v16_L1v1-v2/50000/04D3FBF0-A539-5143-9A1C-8D42A1D54C88.root  outputFile=HIG-RunIISummer20UL18NanoAODv9-02546.root
 ```
 
 # Details
@@ -83,17 +83,18 @@ cmsDriver.py  --python_filename HIG-RunIISummer20UL16NanoAODv9-02412_1_cfg.py --
 ```python
 from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ('analysis')
-options.register ('nEvents',
-                    -1,
-                    VarParsing.multiplicity.singleton,
-                    VarParsing.varType.int,
-                    "max number of events")
-options.register ('inputFile',
-                    'test.root',
-                    VarParsing.multiplicity.singleton,
-                    VarParsing.varType.string,
-                    "input file")
 options.parseArguments()
+```
+Reference: https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideCommandLineParsing#Default_options
+
+default options that we can use:
+
+```
+    maxEvents
+    totalSections
+    section
+    inputFiles
+    outputFile
 ```
 
 Remove the hardcoded input file and number of events from the config file and replace them with the following:
