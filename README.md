@@ -45,12 +45,18 @@ cmsRun HIG-RunIISummer20UL16NanoAODAPVv9-01726_1_cfg.py
 cmsRun HIG-RunIISummer20UL16NanoAODv9-02412_1_cfg.py
 ```
 
+INFO: Use  following command to run the config file with specific root file and number of events.
+
+```bash
+cmsRun HIG-RunIISummer20UL18NanoAODv9-02546_1_cfg.py maxEvents=-1 inputFiles=/store/mc/RunIISummer20UL18MiniAODv2/GluGluToRadionToHHTo2G2WTo2G4Q_M-1000_TuneCP5_PSWeights_narrow_13TeV-madgraph-pythia8/MINIAODSIM/106X_upgrade2018_realistic_v16_L1v1-v2/50000/04D3FBF0-A539-5143-9A1C-8D42A1D54C88.root  outputFile=HIG-RunIISummer20UL18NanoAODv9-02546.root
+```
+
 ## Condor jobs instruction
 
-Information: Use  following command to run the config file with specific root file and number of events.
+To create the condor jobs submission script use the script [condor_setup.py](condor_setup.py). This script uses YAML file having list of samples.
 
-```
-cmsRun HIG-RunIISummer20UL18NanoAODv9-02546_1_cfg.py maxEvents=-1 inputFiles=/store/mc/RunIISummer20UL18MiniAODv2/GluGluToRadionToHHTo2G2WTo2G4Q_M-1000_TuneCP5_PSWeights_narrow_13TeV-madgraph-pythia8/MINIAODSIM/106X_upgrade2018_realistic_v16_L1v1-v2/50000/04D3FBF0-A539-5143-9A1C-8D42A1D54C88.root  outputFile=HIG-RunIISummer20UL18NanoAODv9-02546.root
+```bash
+python condor_setup.py --help
 ```
 
 # Details

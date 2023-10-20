@@ -18,8 +18,10 @@ parser.add_argument('--queue', type=int, default=1,
                     help='Number of jobs')
 parser.add_argument('--year', type=str, default="UL2018", choices=['UL2018', 'UL2017', 'UL2016', 'UL2016APV'],
                     help='Year of the sample')
+parser.add_argument('--yaml', type=str, default="UL2018_XHH_Samples.yaml", )
 parser.add_argument('--maxEvents', type=int, default=-1,
                     help='Number of events to run')
+parser.add_argument('--debug', action='store_true')
 
 args = parser.parse_args()
 
@@ -28,6 +30,9 @@ TopLogDirectory = args.TopLogDirectory
 outputDirName = args.output_dir_name
 CondorQueue = args.condor_queue
 queue = args.queue
+
+if args.debug:
+     args.maxEvents = 100
 
 cmsswConfigFileMap = {
     'UL2018': 'HIG-RunIISummer20UL18NanoAODv9-02546_1_cfg.py',
@@ -56,7 +61,7 @@ with open(f"{CondorExecutable}.jdl","w") as fout:
 
 
     # Open the YAML file
-    with open("UL2018_samples.yaml", "r") as f:
+    with open(args.yaml, "r") as f:
         data = yaml.safe_load(f)
         print("data: {}".format(data))
 
@@ -104,6 +109,8 @@ with open(f"{CondorExecutable}.jdl","w") as fout:
                                                 outDir = output_rootfile_path,
                                                 queue = queue
                                                 ))
+                if args.debug:
+                    break
 
 # Make the shell script executable
 os.system(f"chmod 777 {CondorExecutable}.sh")
