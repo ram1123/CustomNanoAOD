@@ -1,15 +1,18 @@
 import argparse
 import os
+import json
+from pathlib import Path
+import subprocess
 
-from Utils.condor_script_template import sh_file_template
-from Utils.condor_script_template import jdl_file_template_part1of2
-from Utils.condor_script_template import jdl_file_template_part2of2
+from templates.condor_script_template import sh_file_template
+from templates.condor_script_template import jdl_file_template_part1of2
+from templates.condor_script_template import jdl_file_template_part2of2
 
 parser = argparse.ArgumentParser(description='Generate Condor script for HH sample')
 
 parser.add_argument('--condor_executable', type=str, default="HH_WWgg_Signal_v2",
                     help='Name of the Condor executable')
-parser.add_argument('--TopLogDirectory', type=str, default="Logs",
+parser.add_argument('--TopLogDirectory', type=str, default="logs",
                     help='Path for the log file')
 parser.add_argument('--output_dir_name', type=str, default="/eos/user/r/rasharma/post_doc_ihep/double-higgs/nanoAODnTuples/nanoAOD_20Oct2023/",
                     help='Path for the output directory')
@@ -38,26 +41,24 @@ queue = args.queue
 if args.debug:
      args.maxEvents = 100
 
-cmsswConfigFileMap = {
-    'UL2018': 'HIG-RunIISummer20UL18NanoAODv9-02546_1_cfg.py',
-    'UL2017': 'HIG-RunIISummer20UL17NanoAODv9-02407_1_cfg.py',
-    'UL2016': 'HIG-RunIISummer20UL16NanoAODv9-02412_1_cfg.py',
-    'UL2016APV': 'HIG-RunIISummer20UL16NanoAODAPVv9-01726_1_cfg.py'
-}
+# Load configuration from json file
+with open("config/config.json", "r") as f:
+    config_data = json.load(f)
 
-replacementMap = {
-    '_TuneCP5_PSWeights_narrow_13TeV-madgraph-pythia8': ''
-}
+cmsswConfigFileMap = config_data["cmsswConfigFileMap"]
+replacementMap = config_data["replacementMap"]
 
 # Create the shell script
-with open(f"{CondorExecutable}.sh","w") as fout:
+condor_executable_path = Path(f"{CondorExecutable}.sh")
+with condor_executable_path.open("w") as fout:
     fout.write(sh_file_template.format(test="Job started...", maxEvents=args.maxEvents))
 
 # Create the job description file
-with open(f"{CondorExecutable}.jdl","w") as fout:
+condor_jdl_path = Path(f"{CondorExecutable}.jdl")
+with condor_jdl_path.open("w") as fout:
     fout.write(jdl_file_template_part1of2.format(
                                             CondorExecutable = CondorExecutable,
-                                            cmsswConfigFile = 'modified_config_files/'+cmsswConfigFileMap[args.year],
+                                            cmsswConfigFile = 'cmssw_modified_config_files/'+cmsswConfigFileMap[args.year],
                                             CondorQueue = CondorQueue))
 
     # Loop over all the sample listed in UL18_signal.json file
@@ -65,10 +66,16 @@ with open(f"{CondorExecutable}.jdl","w") as fout:
 
 
     # Open the YAML file
-    yamlFileWithPath = os.path.join(args.yamlPath, args.yaml)
-    with open(yamlFileWithPath, "r") as f:
-        data = yaml.safe_load(f)
-        print("data: {}".format(data))
+    yamlFileWithPath = Path(args.yamlPath) / args.yaml
+    try:
+        with open(yamlFileWithPath, "r") as f:
+            data = yaml.safe_load(f)
+    except FileNotFoundError:
+        print(f"Error: YAML file {yamlFileWithPath} not found.")
+        exit(1)
+    except yaml.YAMLError as e:
+        print(f"Error: Invalid YAML file: {e}")
+        exit(1)
 
     count_jobs = 0
     # Loop over all the keys in the YAML file
@@ -86,15 +93,29 @@ with open(f"{CondorExecutable}.jdl","w") as fout:
             print("==> campaign = ",campaign)
 
             # Create the output path, where the nanoAOD will be stored
-            output_rootfile_path =  f"{outputDirName}/{Era}/{sample_name}"
-            os.makedirs(output_rootfile_path, exist_ok=True)
+            output_rootfile_path = Path(outputDirName) / Era / sample_name
+            try:
+                output_rootfile_path.mkdir(parents=True, exist_ok=True)
+            except OSError as e:
+                print(f"Error: Could not create directory {output_rootfile_path}: {e}")
+                exit(1)
+
 
             # Create the output log file path
-            output_logfile_path = f"{TopLogDirectory}/{Era}/{sample_name}"
-            os.makedirs(output_logfile_path, exist_ok=True)
+            output_logfile_path = Path(TopLogDirectory) / Era / sample_name
+            try:
+                output_logfile_path.mkdir(parents=True, exist_ok=True)
+            except OSError as e:
+                print(f"Error: Could not create directory {output_logfile_path}: {e}")
+                exit(1)
 
             xrd_redirector = 'root://cms-xrd-global.cern.ch/'
-            output = os.popen('dasgoclient --query="file dataset='+sample+'"').read()
+            cmd = f"dasgoclient --query=\"file dataset={sample}\""
+            try:
+                output = subprocess.check_output(cmd, shell=True).decode()
+            except subprocess.CalledProcessError as e:
+                print(f"Error: dasgoclient query failed: {e}")
+                exit(1)
 
             count_root_files = 0
             for root_file in output.split():
