@@ -18,10 +18,12 @@ parser.add_argument('--queue', type=int, default=1,
                     help='Number of jobs')
 parser.add_argument('--year', type=str, default="UL2018", choices=['UL2018', 'UL2017', 'UL2016', 'UL2016APV'],
                     help='Year of the sample')
-parser.add_argument('--yaml', type=str, default="UL2018_XHH_Samples.yaml", )
+parser.add_argument('--yaml', type=str, default="UL2018_XHH_Samples.yaml")
+parser.add_argument('--yamlPath', type=str, default="yaml_files")
 parser.add_argument('--maxEvents', type=int, default=-1,
                     help='Number of events to run')
-parser.add_argument('--debug', action='store_true')
+parser.add_argument('--debug', action='store_true', default=False,
+                    help='If this is true, only one job will be submitted')
 
 args = parser.parse_args()
 
@@ -53,7 +55,7 @@ with open(f"{CondorExecutable}.sh","w") as fout:
 with open(f"{CondorExecutable}.jdl","w") as fout:
     fout.write(jdl_file_template_part1of2.format(
                                             CondorExecutable = CondorExecutable,
-                                            cmsswConfigFile = cmsswConfigFileMap[args.year],
+                                            cmsswConfigFile = 'modified_config_files/'+cmsswConfigFileMap[args.year],
                                             CondorQueue = CondorQueue))
 
     # Loop over all the sample listed in UL18_signal.json file
@@ -61,7 +63,8 @@ with open(f"{CondorExecutable}.jdl","w") as fout:
 
 
     # Open the YAML file
-    with open(args.yaml, "r") as f:
+    yamlFileWithPath = os.path.join(args.yamlPath, args.yaml)
+    with open(yamlFileWithPath, "r") as f:
         data = yaml.safe_load(f)
         print("data: {}".format(data))
 
@@ -71,14 +74,11 @@ with open(f"{CondorExecutable}.jdl","w") as fout:
     for sample in data[args.year]:
             Era = args.year
             print("Era: {}, sample: {}".format(Era, sample))
-            # sample_name = sample
-            # sample_name = lines.split('/')[1]
             dirName = Era
             sample_name = sample.split('/')[1]
             print("==> sample_name = ",sample_name)
             for key, value in replacementMap.items():
                 sample_name = sample_name.replace(key, value)
-            # sample_name = Era
             campaign = sample.split('/')[2].split('-')[0]
             print("==> sample_name = ",sample_name)
             print("==> campaign = ",campaign)
@@ -96,7 +96,8 @@ with open(f"{CondorExecutable}.jdl","w") as fout:
 
             count_root_files = 0
             for root_file in output.split():
-                #print "=> ",root_file
+                if args.debug:
+                    print("root_file: ",root_file)
                 count_root_files+=1
                 count_jobs += 1
 
@@ -105,13 +106,14 @@ with open(f"{CondorExecutable}.jdl","w") as fout:
                                                 CondorLogPath = output_logfile_path,
                                                 cmsswConfigFile = cmsswConfigFileMap[args.year],
                                                 InputMiniAODFile = root_file,
-                                                OutputNanoAODFile = f"{Era}_$(Cluster)_$(Process).root",
+                                                OutputNanoAODFile = f"{sample_name}_$(Cluster)_$(Process).root",
                                                 outDir = output_rootfile_path,
                                                 queue = queue
                                                 ))
                 if args.debug:
                     break
-
+            if args.debug:
+                break
 # Make the shell script executable
 os.system(f"chmod 777 {CondorExecutable}.sh")
 

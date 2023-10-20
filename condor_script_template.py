@@ -25,8 +25,6 @@ InputMiniAODFile=${{4}}
 OutputNanoAODFile=${{5}}
 outDir=${{6}}
 
-[ ! -d "${{outDir}}" ] && mkdir -p "${{outDir}}"
-
 export SCRAM_ARCH=slc7_amd64_gcc700
 source /cvmfs/cms.cern.ch/cmsset_default.sh
 
@@ -42,6 +40,16 @@ echo "Job is starting on " `date`
 echo "cmsRun ${{cmsConfigFile}} inputFiles=${{InputMiniAODFile}} outputFile=${{OutputNanoAODFile}} maxEvents={maxEvents}"
 cmsRun ${{cmsConfigFile}} inputFiles=${{InputMiniAODFile}} outputFile=${{OutputNanoAODFile}} maxEvents={maxEvents}
 echo "Job is finished on " `date`
+echo "###################################################"
+
+echo "list all the files in the current directory"
+ls -ltr
+echo "###################################################"
+
+# Check if outDir exists? if not create it
+[ ! -d "${{outDir}}" ] && mkdir -p "${{outDir}}"
+echo "List all the files in the output directory: ${{outDir}}"
+ls -ltr ${{outDir}}
 echo "###################################################"
 
 # check if the output file is created then copy else give error
