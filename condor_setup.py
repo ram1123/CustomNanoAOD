@@ -1,8 +1,9 @@
 import argparse
 import os
-from condor_script_template import sh_file_template
-from condor_script_template import jdl_file_template_part1of2
-from condor_script_template import jdl_file_template_part2of2
+
+from Utils.condor_script_template import sh_file_template
+from Utils.condor_script_template import jdl_file_template_part1of2
+from Utils.condor_script_template import jdl_file_template_part2of2
 
 parser = argparse.ArgumentParser(description='Generate Condor script for HH sample')
 
@@ -10,10 +11,11 @@ parser.add_argument('--condor_executable', type=str, default="HH_WWgg_Signal_v2"
                     help='Name of the Condor executable')
 parser.add_argument('--TopLogDirectory', type=str, default="Logs",
                     help='Path for the log file')
-parser.add_argument('--output_dir_name', type=str, default="/eos/user/r/rasharma/post_doc_ihep/double-higgs/nanoAODnTuples/nanoAOD_Oct19/",
+parser.add_argument('--output_dir_name', type=str, default="/eos/user/r/rasharma/post_doc_ihep/double-higgs/nanoAODnTuples/nanoAOD_20Oct2023/",
                     help='Path for the output directory')
-parser.add_argument('--condor_queue', type=str, default="testmatch",
-                    help='Name of the Condor queue: espresso, testmatch')
+parser.add_argument('--condor_queue', type=str, default="tomorrow",
+                    choices=['espresso', 'microcentury', 'longlunch', 'workday', 'tomorrow', 'testmatch', 'nextweek'],
+                    help='Name of the Condor queue')
 parser.add_argument('--queue', type=int, default=1,
                     help='Number of jobs')
 parser.add_argument('--year', type=str, default="UL2018", choices=['UL2018', 'UL2017', 'UL2016', 'UL2016APV'],
@@ -114,6 +116,9 @@ with open(f"{CondorExecutable}.jdl","w") as fout:
                     break
             if args.debug:
                 break
+
+print("\nTotal number of jobs: ",count_jobs)
+
 # Make the shell script executable
 os.system(f"chmod 777 {CondorExecutable}.sh")
 

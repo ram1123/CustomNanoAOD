@@ -53,7 +53,7 @@ cmsRun modified_config_files/HIG-RunIISummer20UL18NanoAODv9-02546_1_cfg.py maxEv
 
 ## Condor jobs instruction
 
-To create the condor jobs submission script use the script [condor_setup.py](condor_setup.py). This script uses YAML file having list of samples.
+To create the condor jobs submission script use the script [condor_setup.py](condor_setup.py). This script uses [YAML file](yaml_files/UL2018_XHH_Samples.yaml) having list of samples.
 
 ```bash
 python condor_setup.py --help

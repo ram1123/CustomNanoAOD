@@ -26,6 +26,9 @@ process.load('PhysicsTools.NanoAOD.nano_cff')
 process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
+# Print log file every 10k events
+process.MessageLogger.cerr.FwkReport.reportEvery = cms.untracked.int32(10000)
+
 process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(options.maxEvents)
 )
