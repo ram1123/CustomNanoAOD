@@ -55,7 +55,7 @@ Changes that should be done to get config file for data in MC `cmsDriver.py` com
 1. Replace `--mc` flag with `--data` flag
 2. Replace `--eventcontent NANOAODSIM` with `--eventcontent NANOAOD`
 3. Replace `--datatier NANOAODSIM` with `--datatier NANOAOD`
-4. Update the "global tag (GT)":
+4. Update the "global tag (GT)": Reference pdmv: [https://twiki.cern.ch/twiki/bin/view/CMS/PdmVRun2LegacyAnalysis](https://twiki.cern.ch/twiki/bin/view/CMS/PdmVRun2LegacyAnalysis)
     - For 2018: `--conditions 106X_upgrade2018_realistic_v16_L1v1` with `--conditions 106X_dataRun2_v37`
     - For 2017: `--conditions 106X_mc2017_realistic_v9` with `--conditions 106X_dataRun2_v37` # INFO: GT for 2017 MC does not match with MCCM and pdmv webpage
     - For 2016: `--conditions 106X_mcRun2_asymptotic_v17` with `--conditions 106X_dataRun2_v37`
@@ -63,11 +63,11 @@ Changes that should be done to get config file for data in MC `cmsDriver.py` com
 5. Also, need to update the customise function to use the one from nanoTuples_cff.py
     - `--customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeData`
 
+### cmsDriver.py commands for DATA nanoAOD production, based on the above changes
+
 1. UL18:
 
     ```bash
-    # For data just replace NANOAODSIM with NANOAOD
-    # Update the global tag from pdmv: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVRun2LegacyAnalysis
     # Update the customise function to use the one from nanoTuples_cff.py
     cmsDriver.py  --python_filename DATA-Run2018-NanoAODv9-02546_1_cfg.py --eventcontent NANOAOD --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeData  --customise Configuration/DataProcessing/Utils.addMonitoring --datatier NANOAOD --fileout file:DATA-Run2018-NanoAODv9-02546.root --conditions 106X_dataRun2_v37 --step NANO --filein "/store/data/Run2018D/EGamma/MINIAOD/UL2018_MiniAODv2-v2/280002/89F5F63C-8F5E-0744-8C0D-73411CC7FE39.root" --era Run2_2018,run2_nanoAOD_106Xv2 --no_exec --data -n 100
     ```
@@ -134,4 +134,11 @@ Remove the hardcoded input file and number of events from the config file and re
 
     ```python
     fileName = cms.untracked.string('file:'+options.outputFile),
+    ```
+
+4. Add the message logger to print the log file every 10k events not for each event. By default it prints for each event. This increase the log file size. To avoid this, add the following line to the config file:
+
+    ```python
+    # Print log file every 10k events
+    process.MessageLogger.cerr.FwkReport.reportEvery = cms.untracked.int32(10000)
     ```
