@@ -59,7 +59,8 @@ To create the condor jobs submission script use the script [condor_setup.py](con
 python3 condor_setup.py --help
 ```
 
-**NOTE:** Check the config file before submitting the jobs: [config.json](config/config.json)
+**NOTE-1:** Check the config file before submitting the jobs: [config.json](config/config.json)
+**NOTE-2:** The condor submission script distinguish between MC and data using the string of DAS name: "MINIAODSIM".
 
 Some example commands to create the condor jobs submission script.
 

@@ -2,13 +2,13 @@
 # using:
 # Revision: 1.19
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v
-# with command line options: --python_filename DATA-Run2018-NanoAODv9-02546_1_cfg.py --eventcontent NANOAOD --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeData --customise Configuration/DataProcessing/Utils.addMonitoring --datatier NANOAOD --fileout file:DATA-Run2018-NanoAODv9-02546.root --conditions 106X_dataRun2_v37 --step NANO --filein /store/data/Run2018D/EGamma/MINIAOD/UL2018_MiniAODv2-v2/280002/89F5F63C-8F5E-0744-8C0D-73411CC7FE39.root --era Run2_2018,run2_nanoAOD_106Xv2 --no_exec --data -n 100
+# with command line options: --python_filename DATA-Run2017-NanoAODv9-02407_1_cfg.py --eventcontent NANOAOD --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeData --customise Configuration/DataProcessing/Utils.addMonitoring --datatier NANOAOD --fileout file:DATA-Run2017-NanoAODv9-02407.root --conditions 106X_dataRun2_v37 --step NANO --filein /store/data/Run2017F/EGamma/MINIAOD/UL2017_MiniAODv2-v1/280000/FFA0B0A0-0B5C-5C4A-9B1B-9F6F6B9B9B9B.root --era Run2_2017,run2_nanoAOD_106Xv2 --no_exec --data -n 100
 import FWCore.ParameterSet.Config as cms
 
-from Configuration.Eras.Era_Run2_2018_cff import Run2_2018
+from Configuration.Eras.Era_Run2_2017_cff import Run2_2017
 from Configuration.Eras.Modifier_run2_nanoAOD_106Xv2_cff import run2_nanoAOD_106Xv2
 
-process = cms.Process('NANO',Run2_2018,run2_nanoAOD_106Xv2)
+process = cms.Process('NANO',Run2_2017,run2_nanoAOD_106Xv2)
 
 # import of standard configurations
 process.load('Configuration.StandardSequences.Services_cff')
