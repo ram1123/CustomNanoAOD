@@ -48,7 +48,7 @@ echo "###################################################"
 
 # Check if outDir exists? if not create it
 [ ! -d "${{outDir}}" ] && mkdir -p "${{outDir}}"
-echo "List all the files in the output directory: ${{outDir}}"
+# echo "List all the files in the output directory: ${{outDir}}"
 ls -ltr ${{outDir}}
 echo "###################################################"
 
