@@ -28,7 +28,13 @@ To get the cmssw configuration file for the nanoAOD production, we use the scrip
 1. UL18: Ref: https://cms-pdmv.cern.ch/mcm/requests?prepid=HIG-RunIISummer20UL18NanoAODv9-02546&page=0&shown=127
 
     ```bash
+    # Command for generating cmssw configuration file For MC, to get nanoAOD from miniAOD file
     cmsDriver.py  --python_filename HIG-RunIISummer20UL18NanoAODv9-02546_1_cfg.py --eventcontent NANOAODSIM --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeMC  --customise Configuration/DataProcessing/Utils.addMonitoring --datatier NANOAODSIM --fileout file:HIG-RunIISummer20UL18NanoAODv9-02546.root --conditions 106X_upgrade2018_realistic_v16_L1v1 --step NANO --filein "dbs:/GluGluToRadionToHHTo2G2WTo2G4Q_M-1000_TuneCP5_PSWeights_narrow_13TeV-madgraph-pythia8/RunIISummer20UL18MiniAODv2-106X_upgrade2018_realistic_v16_L1v1-v2/MINIAODSIM" --era Run2_2018,run2_nanoAOD_106Xv2 --no_exec --mc -n 100
+
+    # For data just replace NANOAODSIM with NANOAOD
+    # Update the global tag from pdmv: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVRun2LegacyAnalysis
+    # Update the customise function to use the one from nanoTuples_cff.py
+    cmsDriver.py  --python_filename DATA-Run2018-NanoAODv9-02546_1_cfg.py --eventcontent NANOAOD --customise PhysicsTools/NanoTuples/nanoTuples_cff.nanoTuples_customizeData  --customise Configuration/DataProcessing/Utils.addMonitoring --datatier NANOAOD --fileout file:HIG-RunIISummer20UL18NanoAODv9-02546.root --conditions 106X_dataRun2_v37 --step NANO --filein "/store/data/Run2018D/EGamma/MINIAOD/UL2018_MiniAODv2-v2/280002/89F5F63C-8F5E-0744-8C0D-73411CC7FE39.root" --era Run2_2018,run2_nanoAOD_106Xv2 --no_exec --data -n 100
     ```
 
 2. UL17: Ref: https://cms-pdmv.cern.ch/mcm/requests?prepid=HIG-RunIISummer20UL17NanoAODv9-02407&page=0&shown=127
