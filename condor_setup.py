@@ -45,7 +45,8 @@ if args.debug:
 with open("config/config.json", "r") as f:
     config_data = json.load(f)
 
-cmsswConfigFileMap = config_data["cmsswConfigFileMap"]
+cmsswConfigFileMap_MC = config_data["cmsswConfigFileMap_MC"]
+cmsswConfigFileMap_DATA = config_data["cmsswConfigFileMap_DATA"]
 replacementMap = config_data["replacementMap"]
 
 # Create the shell script
@@ -58,7 +59,7 @@ condor_jdl_path = Path(f"{CondorExecutable}.jdl")
 with condor_jdl_path.open("w") as fout:
     fout.write(jdl_file_template_part1of2.format(
                                             CondorExecutable = CondorExecutable,
-                                            cmsswConfigFile = 'cmssw_modified_config_files/'+cmsswConfigFileMap[args.year],
+                                            cmsswConfigFile = 'cmssw_modified_config_files/'+cmsswConfigFileMap_MC[args.year] + ', ' + 'cmssw_modified_config_files/'+cmsswConfigFileMap_DATA[args.year],
                                             CondorQueue = CondorQueue))
 
     # Loop over all the sample listed in UL18_signal.json file
@@ -78,16 +79,26 @@ with condor_jdl_path.open("w") as fout:
         exit(1)
 
     count_jobs = 0
+    isMC = False
     # Loop over all the keys in the YAML file
     # for Era in data.keys():
     for sample in data[args.year]:
+            # If the sample contains "MINIAODSIM", then it is MC sample otherwise it is data
+            if "MINIAODSIM" in sample:
+                isMC = True
+                cmsswConfigFileMap = cmsswConfigFileMap_MC
+            else:
+                isMC = False
+                cmsswConfigFileMap = cmsswConfigFileMap_DATA
             Era = args.year
-            print("Era: {}, sample: {}".format(Era, sample))
+            print("Era: {}, sample: {}, isMC: {}".format(Era, sample, isMC))
             dirName = Era
             sample_name = sample.split('/')[1]
+            if not isMC:
+                sample_name = sample_name + '_' + sample.split('/')[2].split('-')[0] # Example: EGamma_Run2018A
             print("==> sample_name = ",sample_name)
             for key, value in replacementMap.items():
-                sample_name = sample_name.replace(key, value)
+                sample_name = sample_name.replace(key, value) # Example:GluGluToRadionToHHTo2G2WTo2G4Q_M-1200
             campaign = sample.split('/')[2].split('-')[0]
             print("==> sample_name = ",sample_name)
             print("==> campaign = ",campaign)

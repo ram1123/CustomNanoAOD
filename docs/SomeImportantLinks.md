@@ -1,0 +1,5 @@
+- NanoAOD workbook twiki: https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookNanoAOD
+    - Private nanoAOD production information:
+        - https://gitlab.cern.ch/cms-nanoAOD/nanoaod-doc/-/wikis/Instructions/Private-production
+        - https://twiki.cern.ch/twiki/bin/viewauth/CMS/NanoAODProduction
+- PdmV twiki: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVRun2LegacyAnalysis
