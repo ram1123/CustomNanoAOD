@@ -54,13 +54,13 @@ echo "###################################################"
 
 # check if the output file is created then copy else give error
 if [ -f ${{OutputNanoAODFile}} ]; then
-    echo "cp ${{OutputNanoAODFile}} ${{outDir}}/${{OutputNanoAODFile}}"
-    cp ${{OutputNanoAODFile}} ${{outDir}}/${{OutputNanoAODFile}}
+    echo "xrdcp ${{OutputNanoAODFile}} ${{outDir}}/${{OutputNanoAODFile}}"
+    xrdcp ${{OutputNanoAODFile}} ${{outDir}}/${{OutputNanoAODFile}}
 else
     OutputNanoAODfile=${{OutputNanoAODFile%.root}}
     if [ -f ${{OutputNanoAODfile}}*.root ]; then
-        echo "cp ${{OutputNanoAODfile}}*.root ${{outDir}}/${{OutputNanoAODFile}}"
-        cp ${{OutputNanoAODfile}}*.root ${{outDir}}/${{OutputNanoAODFile}}
+        echo "xrdcp ${{OutputNanoAODfile}}*.root ${{outDir}}/${{OutputNanoAODFile}}"
+        xrdcp ${{OutputNanoAODfile}}*.root ${{outDir}}/${{OutputNanoAODFile}}
     else
         echo "Error: ${{OutputNanoAODFile}} is not created"
         echo "list all the files in the current directory"
@@ -79,6 +79,8 @@ Should_Transfer_Files = YES
 Transfer_Output_Files = ""
 Transfer_Input_Files = {CondorExecutable}.sh, {cmsswConfigFile}
 x509userproxy = $ENV(X509_USER_PROXY)
+requirements = TARGET.OpSysAndVer =?= "AlmaLinux9"
+MY.WantOS = "el7"
 getenv      = True
 +JobFlavour = "{CondorQueue}"
 request_memory = 12000

@@ -13,6 +13,15 @@ cp -r /tmp/rasharma/Customized_NanoAOD/NanoTuples PhysicsTools/
 scram b -j8
 ``` -->
 
+## Step - 1: Get current repository
+
+```bash
+git clone git@github.com:ram1123/CustomNanoAOD_HHWWgg.git
+cd CustomNanoAOD_HHWWgg
+```
+
+## Step - 2: Setup CMSSW environment
+
 ```bash
 cmsrel CMSSW_10_6_30
 cd CMSSW_10_6_30/src
@@ -23,7 +32,7 @@ scramv1 b -j 8
 cd $CMSSW_BASE/../
 ```
 
-## Run custom nanoAOD production
+## Step - 3: Run custom nanoAOD production
 
 ```bash
 voms-proxy-init --voms cms --valid 168:00
@@ -32,21 +41,7 @@ cd ${CMSSW_BASE}/src
 cmsenv
 cd ../../
 
-# For 2018
-cmsRun cmssw_modified_config_files/HIG-RunIISummer20UL18NanoAODv9-02546_1_cfg.py
-
-# For 2017
-cmsRun cmssw_modified_config_files/HIG-RunIISummer20UL17NanoAODv9-02407_1_cfg.py
-
-# For 2016APV
-cmsRun cmssw_modified_config_files/HIG-RunIISummer20UL16NanoAODAPVv9-01726_1_cfg.py
-
-# For 2016
-cmsRun cmssw_modified_config_files/HIG-RunIISummer20UL16NanoAODv9-02412_1_cfg.py
-```
-
-INFO: Use  following command to run the config file with specific root file and number of events.
-
+# Use the appropriate config file for different years
 ```bash
 cmsRun cmssw_modified_config_files/HIG-RunIISummer20UL18NanoAODv9-02546_1_cfg.py maxEvents=-1 inputFiles=/store/mc/RunIISummer20UL18MiniAODv2/GluGluToRadionToHHTo2G2WTo2G4Q_M-1000_TuneCP5_PSWeights_narrow_13TeV-madgraph-pythia8/MINIAODSIM/106X_upgrade2018_realistic_v16_L1v1-v2/50000/04D3FBF0-A539-5143-9A1C-8D42A1D54C88.root  outputFile=HIG-RunIISummer20UL18NanoAODv9-02546.root
 ```
@@ -78,3 +73,16 @@ Some example commands to create the condor jobs submission script.
     ```bash
     python3 condor_setup.py --condor_executable HHWWgg_UL2018 --yaml_file UL2018_XHH_Samples.yaml --year UL2018
     ```
+
+## Failed condor jobs check and resbumit
+
+[condor_resubmit.py](condor_resubmit.py): This script can be used to resubmit the failed condor jobs. It takes the condor log files as input and resubmits the failed jobs. It can be used as follows:
+
+```bash
+python condor_resubmit.py -j <condor_jdl_file> -l <log_directory> -o <output_directory> -n <resubmission_count>
+
+# Example command:
+python3 condor_resubmit.py -j HHbbgg_Signal_Mar2024.jdl -l logs/UL2018/EGamma_Run2018A/ -o /eos/user/r/rasharma/post_doc_ihep/double-higgs/nanoAODnTuples/nanoAOD_Mar2024/UL2018/EGamma_Run2018A -n 1
+```
+
+This will give you new jdl file. Then you can submit the new jdl file.

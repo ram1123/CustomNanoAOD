@@ -14,7 +14,14 @@ parser.add_argument('--condor_executable', type=str, default="HH_WWgg_Signal_v2"
                     help='Name of the Condor executable')
 parser.add_argument('--TopLogDirectory', type=str, default="logs",
                     help='Path for the log file')
-parser.add_argument('--output_dir_name', type=str, default="/eos/user/r/rasharma/post_doc_ihep/double-higgs/nanoAODnTuples/nanoAOD_20Oct2023/",
+# add eos redirector:  root://eosuser.cern.ch/ or root://cms-xrd-global.cern.ch/
+# add only two options: 1. eos redirector and 2. for global redirector
+parser.add_argument('--eos_redirector', type=int, default=1,
+                    choices=[1, 2], help="""EOS redirector:
+                                                            1. EOS redirectory: root://eosuser.cern.ch/
+                                                            2. Global redirector: root://cms-xrd-global.cern.ch/
+                                                            """)
+parser.add_argument('--output_dir_name', type=str, default="/eos/user/r/rasharma/post_doc_ihep/double-higgs/nanoAODnTuples/nanoAOD_Mar2024/",
                     help='Path for the output directory')
 parser.add_argument('--condor_queue', type=str, default="tomorrow",
                     choices=['espresso', 'microcentury', 'longlunch', 'workday', 'tomorrow', 'testmatch', 'nextweek'],
@@ -37,6 +44,10 @@ TopLogDirectory = args.TopLogDirectory
 outputDirName = args.output_dir_name
 CondorQueue = args.condor_queue
 queue = args.queue
+if args.eos_redirector == 1:
+    xrd_redirector = 'root://eosuser.cern.ch/'
+else:
+    xrd_redirector = 'root://cms-xrd-global.cern.ch/'
 
 if args.debug:
      args.maxEvents = 100
@@ -120,7 +131,6 @@ with condor_jdl_path.open("w") as fout:
                 print(f"Error: Could not create directory {output_logfile_path}: {e}")
                 exit(1)
 
-            xrd_redirector = 'root://cms-xrd-global.cern.ch/'
             cmd = f"dasgoclient --query=\"file dataset={sample}\""
             try:
                 output = subprocess.check_output(cmd, shell=True).decode()
@@ -140,8 +150,8 @@ with condor_jdl_path.open("w") as fout:
                                                 CondorLogPath = output_logfile_path,
                                                 cmsswConfigFile = cmsswConfigFileMap[args.year],
                                                 InputMiniAODFile = root_file,
-                                                OutputNanoAODFile = f"{sample_name}_$(Cluster)_$(Process).root",
-                                                outDir = output_rootfile_path,
+                                                OutputNanoAODFile = root_file.split('/')[-1],
+                                                outDir = xrd_redirector + str(output_rootfile_path),
                                                 queue = queue
                                                 ))
                 if args.debug:

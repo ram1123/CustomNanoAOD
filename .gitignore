@@ -5,3 +5,4 @@ CMSSW_10_6_30/
 *.stdout
 *.pyc
 *.jdl
+nanoAODv11/
