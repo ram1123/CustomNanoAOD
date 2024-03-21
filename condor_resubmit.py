@@ -1,8 +1,8 @@
 import os
 from ROOT import TFile
-from Resubmit_template import jdl_part_1, jdl_part_2
 import re
 import subprocess
+import argparse
 
 DEBUG = True
 """Condor resubmit script.
@@ -255,10 +255,11 @@ def main():
     """
     # Add argparse to get the input arguments
     parser = argparse.ArgumentParser(description='Condor resubmit script.')
-    parser.add_argument('--jdl_file', help='JDL file with path', required=True)
-    parser.add_argument('--CondorLogDir', help='Path to the log files', required=True)
-    parser.add_argument('--output_dir', help='Path to the output directory', required=True)
+    parser.add_argument('-j', '--jdl_file', help='JDL file with path', required=True)
+    parser.add_argument('-l', '--CondorLogDir', help='Path to the log files', required=True)
+    parser.add_argument('-o', '--output_dir', help='Path to the output directory', required=True)
     parser.add_argument("-c", "--condor_job_id", dest="condor_job_id",default="",help="condor job id")
+    parser.add_argument("-n", "--resubmit_no", dest="resubmit_no",default=1,help="resubmit counter")
     args = parser.parse_args()
 
     jdl_file = args.jdl_file
