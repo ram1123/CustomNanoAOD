@@ -13,7 +13,7 @@ cmsenv
 git cms-addpkg PhysicsTools
 # copy `NanoTuples` directory from https://github.com/gqlcms/Customized_NanoAOD inside `PhysicsTools` directory
 git clone git@github.com:gqlcms/Customized_NanoAOD.git /tmp/rasharma/Customized_NanoAOD
-cp -r /tmp/rasharma/Customized_NanoAOD/NanoTuples PhysicsTools/
+cp -r /tmp/rasharma/Customized_NanoAOD/PhysicsTools/NanoTuples PhysicsTools/
 ./PhysicsTools/NanoTuples/scripts/install_onnxruntime.sh
 scram b -j8
 
