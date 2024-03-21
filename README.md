@@ -76,13 +76,13 @@ Some example commands to create the condor jobs submission script.
 
 ## Failed condor jobs check and resbumit
 
-    [condor_resubmit.py](condor_resubmit.py): This script can be used to resubmit the failed condor jobs. It takes the condor log files as input and resubmits the failed jobs. It can be used as follows:
+[condor_resubmit.py](condor_resubmit.py): This script can be used to resubmit the failed condor jobs. It takes the condor log files as input and resubmits the failed jobs. It can be used as follows:
 
-   ```bash
-   python condor_resubmit.py -j <condor_jdl_file> -l <log_directory> -o <output_directory> -n <resubmission_count>
+```bash
+python condor_resubmit.py -j <condor_jdl_file> -l <log_directory> -o <output_directory> -n <resubmission_count>
 
-   # Example command:
-    python3 condor_resubmit.py -j HHbbgg_Signal_Mar2024.jdl -l logs/UL2018/EGamma_Run2018A/ -o /eos/user/r/rasharma/post_doc_ihep/double-higgs/nanoAODnTuples/nanoAOD_Mar2024/UL2018/EGamma_Run2018A -n 1
-    ```
+# Example command:
+python3 condor_resubmit.py -j HHbbgg_Signal_Mar2024.jdl -l logs/UL2018/EGamma_Run2018A/ -o /eos/user/r/rasharma/post_doc_ihep/double-higgs/nanoAODnTuples/nanoAOD_Mar2024/UL2018/EGamma_Run2018A -n 1
+```
 
-    This will give you new jdl file. Then you can submit the new jdl file.
+This will give you new jdl file. Then you can submit the new jdl file.
