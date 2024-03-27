@@ -85,4 +85,6 @@ python condor_resubmit.py -j <condor_jdl_file> -l <log_directory> -o <output_dir
 python3 condor_resubmit.py -j HHbbgg_Signal_Mar2024.jdl -l logs/UL2018/EGamma_Run2018A/ -o /eos/user/r/rasharma/post_doc_ihep/double-higgs/nanoAODnTuples/nanoAOD_Mar2024/UL2018/EGamma_Run2018A -n 1
 ```
 
+***NOTE*** : The output directory should be the top directory using which the condor jobs were submitted (or the main path were all output files are stored).
+
 This will give you new jdl file. Then you can submit the new jdl file.

@@ -4,7 +4,6 @@ import re
 import subprocess
 import argparse
 
-DEBUG = True
 """Condor resubmit script.
 
 # Three steps to submit condor script
@@ -57,30 +56,42 @@ def get_root_files_from_dir(directory):
     Returns:
         list: List of output root files.
     """
-    flist = os.listdir(directory)
-    RootFlist = [fname for fname in flist if '.root' in fname]
+    print("directory: {0}".format(directory))
 
     # check if they are not corrupted and have entries
     filelist_to_remove = []
-    for file in RootFlist:
-      tfile = None
-      print('Checking file: '+directory+'/'+file)
-      try:
-        tfile = TFile.Open(directory+'/'+file);
-      except:
-        pass
-      print('File is open: {}'.format(tfile))
-      if tfile:
-        if (tfile.IsZombie()):
-          filelist_to_remove.append(file)
-      else:
-        print('File could not be opened, adding it to missing files')
-        filelist_to_remove.append(file)
 
-    print('Removing the following files from the list of root files: ')
-    print(filelist_to_remove)
-    RootFlist = [fname for fname in RootFlist if fname not in filelist_to_remove]
-    return RootFlist
+    root_files = []
+    ValidRootFiles = []
+    for dirpath, dirnames, filenames in os.walk(directory):
+        for filename in filenames:
+            if filename.endswith('.root'):
+                full_path = os.path.join(dirpath, filename)
+                # print('Checking file: '+full_path)
+                root_files.append(full_path)
+
+                tfile = None
+                try:
+                    tfile = TFile.Open(full_path);
+                except:
+                    pass
+                if tfile:
+                    if (tfile.IsZombie() or tfile.TestBit(TFile.kRecovered) or tfile.GetListOfKeys().IsEmpty()):
+
+                        filelist_to_remove.append(filename)
+                    else:
+                        ValidRootFiles.append(filename)
+                else:
+                    print('File could not be opened, adding it to missing files')
+                    filelist_to_remove.append(filename)
+
+    print("Total root file in the directory: {0}".format(len(root_files)))
+    print("length of corrupted root files: {0}".format(len(filelist_to_remove)))
+    print("length of ValidRootFiles: {0}".format(len(ValidRootFiles)))
+    # print('Removing the following files from the list of root files: ')
+    # print(filelist_to_remove)
+
+    return ValidRootFiles
 
 def get_missing_files(job_list, root_file_list):
     """Compare the two lists and find the missing root files.
@@ -140,17 +151,18 @@ def get_output_files_from_jdl(path_jdl):
 
     return output_root_files, map
 
-def prepare_runJobs_missing(FailedJobRootFile,InputJdlFile,CondorLogDir,EOSDir,Resubmit_no):
+def prepare_runJobs_missing(FailedJobRootFile,InputJdlFile,CondorLogDir,EOSDir,Resubmit_no, attach_job_id, DEBUG=False):
     if DEBUG: print("FailedJobRootFile: {}".format(FailedJobRootFile))
     if DEBUG: print("InputJdlFile: {}".format(InputJdlFile))
     if DEBUG: print("CondorLogDir: {}".format(CondorLogDir))
     if DEBUG: print("EOSDir: {}".format(EOSDir))
 
-    bashCommand = "cp {0}  original_{0}".format(InputJdlFile)
+    bashCommand = "cp {0}  original_{1}".format(InputJdlFile, InputJdlFile.split('/')[-1])
     if DEBUG: print("copy command: {}".format(bashCommand))
     os.system(bashCommand)
 
-    outjdl_fileName = InputJdlFile.replace(".jdl", "_resubmit_"+str(Resubmit_no)+".jdl")
+    outjdl_fileName = (InputJdlFile.split('/')[-1]).replace(".jdl", "_resubmit_"+str(Resubmit_no)+".jdl")
+    print("outjdl_fileName: {}".format(outjdl_fileName))
     outjdl_file = open(outjdl_fileName,"w")
 
     with open(InputJdlFile, 'r') as myfile:
@@ -164,23 +176,25 @@ def prepare_runJobs_missing(FailedJobRootFile,InputJdlFile,CondorLogDir,EOSDir,R
             outjdl_file.write(line)
 
     for RootFiles in FailedJobRootFile:
+        match = None
+        OldRefFile = ""
         if DEBUG: print("Root file to look for in stdout files: {}".format(RootFiles))
         bashCommand = "grep {} {}/*.stdout".format(RootFiles, CondorLogDir)
         if DEBUG: print("grep command: {}".format(bashCommand))
-        grep_stdout_files = os.popen(bashCommand).read()
-        if DEBUG: print("{}\n{}\n{}".format("="*51,grep_stdout_files,"="*51))
+        if attach_job_id:
+            grep_stdout_files = os.popen(bashCommand).read()
+            if DEBUG: print("{}\n{}\n{}".format("="*51,grep_stdout_files,"="*51))
 
-        # Regular expression to match paths ending with .stdout
-        stdout_file_pattern = re.compile(r'\S+\.stdout')
+            # Regular expression to match paths ending with .stdout
+            stdout_file_pattern = re.compile(r'\S+\.stdout')
 
-        # Search for the .stdout file path in the output
-        match = stdout_file_pattern.search(grep_stdout_files)
-        # print("===")
-        # print("grep command: {}".format(bashCommand))
-        # print("{}".format(grep_stdout_files))
-        # print("Match: {}".format(match))
+            # Search for the .stdout file path in the output
+            match = stdout_file_pattern.search(grep_stdout_files)
+            # print("===")
+            # print("grep command: {}".format(bashCommand))
+            # print("{}".format(grep_stdout_files))
+            # print("Match: {}".format(match))
 
-        OldRefFile = ""
         if match:
             stdout_file_path = match.group()
             if DEBUG: print(stdout_file_path.strip())
@@ -203,7 +217,7 @@ def prepare_runJobs_missing(FailedJobRootFile,InputJdlFile,CondorLogDir,EOSDir,R
     outjdl_file.close()
     return outjdl_fileName
 
-def get_condor_job_details(job_id):
+def get_condor_job_details(job_id, DEBUG=False):
     """
     Grabs a list of all Condor jobs associated with a specific job ID,
     then extracts the specified arguments from each job's command.
@@ -260,6 +274,8 @@ def main():
     parser.add_argument('-o', '--output_dir', help='Path to the output directory', required=True)
     parser.add_argument("-c", "--condor_job_id", dest="condor_job_id",default="",help="condor job id")
     parser.add_argument("-n", "--resubmit_no", dest="resubmit_no",default=1,help="resubmit counter")
+    parser.add_argument("-d", "--debug", dest="debug",default=False,help="debug")
+    parser.add_argument("-a", "--attach_job_id", dest="attach_job_id",default=False,help="attach job id to new job log files, this may help to compare the log files")
     args = parser.parse_args()
 
     jdl_file = args.jdl_file
@@ -269,30 +285,42 @@ def main():
 
     # Step - 1: Get the root file information from the jdl file
     root_file_list_from_jdl, map_in_out_files = get_output_files_from_jdl(jdl_file)
-    print("root_file_list_from_jdl: {0}".format(root_file_list_from_jdl))
+    print("length of root_file_list_from_jdl: {0}".format(len(root_file_list_from_jdl)))
+    if args.debug: print("root_file_list_from_jdl: {0}".format(root_file_list_from_jdl))
 
     # Step - 2: Get the root file information from the output directory
     root_file_list = get_root_files_from_dir(output_dir)
-    print("root_file_list: {0}".format(root_file_list))
+    print("length of root_file_list: {0}".format(len(root_file_list)))
+    # print("root_file_list: {0}".format(root_file_list))
+    if args.debug: print("root_file_list: {0}".format(root_file_list))
 
     # Step - 3: Compare the two lists and find the missing root files
     missing = list(set(root_file_list_from_jdl) - set(root_file_list))
-    print("missing: {0}".format(missing))
+    print("length of missing: {0}".format(len(missing)))
+    if args.debug: print("missing: {0}".format(missing))
 
     # If the condor jobs are still running then remove the files over which condor jobs are running from the list "missing"
     if condor_job_id:
-        details = get_condor_job_details(condor_job_id)
+        details = get_condor_job_details(condor_job_id, args.debug)
         print('Number of condor jobs running : {}'.format(len(details)))
-        if DEBUG: print('Condor jobs running : {}'.format(details))
-        if DEBUG: print('Missing files : {}'.format(missing))
+        if args.debug: print('Condor jobs running : {}'.format(details))
+        if args.debug: print('Missing files : {}'.format(missing))
         missing = list(set(missing) - set(details))
 
         print('Number of missing files (after removing the files over which condor jobs are running) : {}'.format(len(missing)))
-        if DEBUG: print('Missing files (after removing the files over which condor jobs are running) : {}'.format(missing))
+        if args.debug: print('Missing files (after removing the files over which condor jobs are running) : {}'.format(missing))
 
 
     # Step - 3: Prepare the new jdl file
-    jdl_file = prepare_runJobs_missing(missing, jdl_file, CondorLogDir, output_dir, str(1))
+    jdl_file = prepare_runJobs_missing(missing, jdl_file, CondorLogDir, output_dir, str(1), args.attach_job_id, args.debug)
+
+    # Print summary of files:
+    print("====================================")
+    print("Summary of files:")
+    print("length of root_file_list_from_jdl: {0}".format(len(root_file_list_from_jdl)))
+    print("length of root_file_list from output directory: {0}".format(len(root_file_list)))
+    print("length of missing files: {0}".format(len(missing)))
+    print("====================================")
 
     # Step - 4: Submit the new jdl file
     print('Submitting missing jobs : ')
