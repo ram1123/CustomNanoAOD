@@ -1,0 +1,17 @@
+Executable = /afs/cern.ch/user/r/rasharma/work/doubleHiggs/CustomNanoAOD/RunConfigFile.sh
+Universe = vanilla
+Notification = ERROR
+Should_Transfer_Files = YES
+Transfer_Output_Files = ""
+Transfer_Input_Files = /afs/cern.ch/user/r/rasharma/work/doubleHiggs/CustomNanoAOD/RunConfigFile.sh
+x509userproxy = $ENV(X509_USER_PROXY)
+requirements = TARGET.OpSysAndVer =?= "AlmaLinux9"
+getenv      = True
++JobFlavour = "testmatch"
+request_memory = 12000
+request_cpus = 8
+Output = $(CondorLogPath)/log_$(Cluster)_$(Process).stdout
+Error = $(CondorLogPath)/log_$(Cluster)_$(Process).err
+Log = $(CondorLogPath)/log_$(Cluster)_$(Process).log
+Arguments = "$(Cluster) $(Process) $(inputMiniAOD) $(outputDirectory)
+queue  50 inputMiniAOD, outputDirectory, CondorLogPath from HMuMu_UL2018.txt
