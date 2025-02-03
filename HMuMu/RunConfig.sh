@@ -22,13 +22,21 @@ InputMiniAODFile=$4
 OutputDir=$5
 
 # Optional max events; default is -1 (all events)
-maxEvents=${6:--1}
+maxEvents=$6
+
+echo "Copy the input file to the local directory"
+echo "xrdcp -f root://cms-xrd-global.cern.ch/${InputMiniAODFile} ${PWD}"
+xrdcp -f root://cms-xrd-global.cern.ch/${InputMiniAODFile} ${PWD}
+
+# Update the name of the input file to the local directory
+InputMiniAODFile=$(basename $InputMiniAODFile)
 
 echo "i am here ${PWD}"
 basePath=${PWD}
 
 # Determine output file name from input file; you might modify this logic as needed.
 OutputNanoAODFile=$(basename $InputMiniAODFile)
+OutputNanoAODFile=${OutputNanoAODFile/.root/_NanoAOD.root} # Replace .root with _NanoAOD.root
 
 # Setup Singularity binding and container selection
 export APPTAINER_BINDPATH='/afs,/cvmfs,/cvmfs/grid.cern.ch/etc/grid-security:/etc/grid-security,/eos,/etc/pki/ca-trust,/run/user,/var/run/user'
@@ -48,12 +56,20 @@ export SINGULARITY_CACHEDIR="/tmp/$(whoami)/singularity"
 singularity exec --no-home /cvmfs/unpacked.cern.ch/registry.hub.docker.com/cmssw/$CONTAINER_NAME /bin/bash -c "
   export SCRAM_ARCH=el8_amd64_gcc11
   source /cvmfs/cms.cern.ch/cmsset_default.sh
+  if [ -r CMSSW_13_0_14/src ] ; then
+    echo release CMSSW_13_0_14 already exists
+  else
+    scram p CMSSW CMSSW_13_0_14
+  fi
   cd CMSSW_13_0_14/src
   eval \`scram runtime -sh\`
   cd ../..
+  pwd
+
 
   # Run the Python configuration file with arguments (if supported by the config)
-  cmsRun ${ConfigFile} inputFiles=${InputMiniAODFile} outputFile=${OutputNanoAODFile} maxEvents=${maxEvents}
+  echo Running cmsRun ${ConfigFile} inputFiles=file:${InputMiniAODFile} outputFile=${OutputNanoAODFile} maxEvents=${maxEvents}
+  cmsRun ${ConfigFile} inputFiles=file:${InputMiniAODFile} outputFile=${OutputNanoAODFile} maxEvents=${maxEvents}
 "
 
 echo "Job is finished on " `date`

@@ -3,7 +3,7 @@ Universe = vanilla
 Notification = ERROR
 Should_Transfer_Files = YES
 Transfer_Output_Files = ""
-Transfer_Input_Files = RunConfig.sh, PPD-RunIISummer20UL18_NanoAODv12_cfg.py
+Transfer_Input_Files = RunConfig.sh, PPD-RunIISummer20UL16preVFP_NanoAODv12_cfg.py
 x509userproxy = $ENV(X509_USER_PROXY)
 getenv      = True
 +JobFlavour = "espresso"
@@ -12,5 +12,5 @@ request_cpus = 8
 Output = $(CondorLogPath)/log_$(Cluster)_$(Process).stdout
 Error = $(CondorLogPath)/log_$(Cluster)_$(Process).err
 Log = $(CondorLogPath)/log_$(Cluster)_$(Process).log
-Arguments = $(Cluster) $(Process) $(configFile) $(inputMiniAOD) $(outputDirectory)
-queue configFile, inputMiniAOD, outputDirectory, CondorLogPath from HMuMu_UL2018.txt
+Arguments = $(Cluster) $(Process) $(configFile) $(inputMiniAOD) $(outputDirectory) $(nEvents)
+queue 1 configFile, inputMiniAOD, outputDirectory, CondorLogPath, nEvents from HMuMu_UL2018.txt
