@@ -1,0 +1,22 @@
+#!/bin/bash
+#SBATCH --job-name=nanoAOD_array       # Name of the job array
+#SBATCH --output=/home/shar1172/CustomNanoAOD/logs/nanoAOD_%A_%a.out   # Output file for each task (%A is the job array ID, %a is the task ID)
+#SBATCH --error=/home/shar1172/CustomNanoAOD/logs/nanoAOD_%A_%a.err    # Error file for each task
+#SBATCH --account=cms
+#SBATCH --array=3-201                    # Task array range (modify this according to your input file count)
+#SBATCH --ntasks=1                     # Number of tasks per job
+#SBATCH --cpus-per-task=8              # Number of CPUs per task
+#SBATCH --mem=12000                    # Memory per task
+#SBATCH --time=02:00:00                # Max run time for each task (HH:MM:SS)
+#SBATCH --get-user-env                 # Get environment variables for the job
+
+
+configFile=$(sed -n "${SLURM_ARRAY_TASK_ID}p" HMuMu_UL2018_3Feb.txt | awk '{print $1}')
+inputMiniAOD=$(sed -n "${SLURM_ARRAY_TASK_ID}p" HMuMu_UL2018_3Feb.txt | awk '{print $2}')
+outputDirectory=$(sed -n "${SLURM_ARRAY_TASK_ID}p" HMuMu_UL2018_3Feb.txt | awk '{print $3}')
+nEvents=$(sed -n "${SLURM_ARRAY_TASK_ID}p" HMuMu_UL2018_3Feb.txt | awk '{print $4}')
+
+echo "Processing job ${SLURM_ARRAY_TASK_ID} with input file: ${inputMiniAOD}"
+
+# Run the main script
+bash condorjob_HMuMu_UL2018.sh $SLURM_ARRAY_TASK_ID $SLURM_ARRAY_TASK_ID $configFile $inputMiniAOD $outputDirectory $nEvents

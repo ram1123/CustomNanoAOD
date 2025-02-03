@@ -23,18 +23,20 @@ parser.add_argument(
 parser.add_argument(
     "--eos_redirector",
     type=int,
-    default=1,
-    choices=[1, 2],
+    default=2,
+    choices=[1, 2, 3],
     help="""EOS redirector:
                                                             1. EOS redirectory: root://eosuser.cern.ch/
-                                                            2. Global redirector: root://cms-xrd-global.cern.ch/
+                                                            2. Purdue redirector: root://eos.cms.rcac.purdue.edu/
+                                                            3. Global redirector: root://cms-xrd-global.cern.ch/
                                                             """,
 )
 parser.add_argument(
     "--output_dir_name",
     type=str,
-    default="/eos/user/r/rasharma/Purdue/test/",
+    default="/store/user/rasharma/customNanoAOD",
     help="Path for the output directory",
+    # FIXME: Update to generalise the path for condor/slurm
 )
 parser.add_argument(
     "--condor_queue",
@@ -78,6 +80,8 @@ CondorQueue = args.condor_queue
 queue = args.queue
 if args.eos_redirector == 1:
     xrd_redirector = "root://eosuser.cern.ch/"
+elif args.eos_redirector == 2:
+    xrd_redirector = "root://eos.cms.rcac.purdue.edu/"
 else:
     xrd_redirector = "root://cms-xrd-global.cern.ch/"
 
@@ -147,7 +151,9 @@ with condor_txt_path.open("w") as fout:
         # Create the output path, where the nanoAOD will be stored
         output_rootfile_path = Path(outputDirName) / Era / sample_name
         try:
-            output_rootfile_path.mkdir(parents=True, exist_ok=True)
+            # output_rootfile_path.mkdir(parents=True, exist_ok=True)
+            os.system('gfal-mkdir -p davs://eos.cms.rcac.purdue.edu:9000{}'.format(output_rootfile_path))
+            # FIXME: Improve this part
         except OSError as e:
             print(f"Error: Could not create directory {output_rootfile_path}: {e}")
             exit(1)

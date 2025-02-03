@@ -1,0 +1,21 @@
+#!/bin/bash
+# FILENAME: hello.sub
+#SBATCH --output=/home/shar1172/CustomNanoAOD/Log/hello_output.txt  # Output file
+#SBATCH --error=/home/shar1172/CustomNanoAOD/Log/myjob.out
+#SBATCH --account=cms
+#SBATCH --export=X509_USER_PROXY="/home/shar1172/CustomNanoAOD/voms_proxy.txt"
+#SBATCH --job-name=sonic-triton-workflow
+#SBATCH --cpus-per-task=1
+#SBATCH --ntasks=1
+#SBATCH --nodes=1
+#SBATCH --time=01-00:00:00
+#SBATCH --mem-per-cpu=12G
+
+
+# Show this ran on a compute node by running the hostname command.
+hostname
+
+echo "Hello World" > hello.md
+
+xrdcp -f hello.md root://eos.cms.rcac.purdue.edu//store/user/rasharma/hello.md
+

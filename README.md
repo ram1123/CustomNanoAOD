@@ -40,6 +40,9 @@ voms-proxy-init --voms cms --valid 168:00
 cd ${CMSSW_BASE}/src
 cmsenv
 cd ../../
+voms-proxy-init --voms cms --valid 168:00 --out $(pwd)/voms_proxy.txt
+export X509_USER_PROXY=$(pwd)/voms_proxy.txt
+```
 
 # Use the appropriate config file for different years
 ```bash

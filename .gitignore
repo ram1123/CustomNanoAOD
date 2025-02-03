@@ -1,11 +1,13 @@
 CMSSW_10_6_26/
 CMSSW_10_6_30/
+CMSSW_13_0_14/
+nanoAODv11/
+voms_proxy.txt
 *.root
 *.err
 *.stdout
 *.pyc
 *.jdl
-nanoAODv11/
-CMSSW_13_0_14/
 .__afs*
-voms_proxy.txt
+*.out
+*.sub
