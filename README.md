@@ -42,6 +42,7 @@ cmsenv
 cd ../../
 voms-proxy-init --voms cms --valid 168:00 --out $(pwd)/voms_proxy.txt
 export X509_USER_PROXY=$(pwd)/voms_proxy.txt
+source /cvmfs/cms.cern.ch/cmsset_default.sh
 ```
 
 # Use the appropriate config file for different years
@@ -89,3 +90,13 @@ python3 condor_resubmit.py -j HHbbgg_Signal_Mar2024.jdl -l logs/UL2018/EGamma_Ru
 ```
 
 This will give you new jdl file. Then you can submit the new jdl file.
+
+
+# 3 Feb 2022
+
+```bash
+python3 -m venv env_jobs_resubmit
+source env_jobs_resubmit/bin/activate
+# Install pandas dataframe
+pip install pandas
+```

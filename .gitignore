@@ -11,3 +11,4 @@ voms_proxy.txt
 .__afs*
 *.out
 *.sub
+env*/
