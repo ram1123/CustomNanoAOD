@@ -13,3 +13,4 @@ voms_proxy.txt
 *.sub
 env*/
 venv/*
+missing*.txt
