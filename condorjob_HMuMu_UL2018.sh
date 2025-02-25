@@ -25,12 +25,15 @@ maxEvents=$6
 
 
 echo "Copy the input file to the local directory"
-echo "xrdcp  root://cms-xrd-global.cern.ch/${InputMiniAODFile} ${PWD}"
+# echo "xrdcp  root://cms-xrd-global.cern.ch/${InputMiniAODFile} ${PWD}"
 # xrdcp  root://cms-xrd-global.cern.ch/${InputMiniAODFile} ${PWD}
+echo "xrdcp  root://cmsxrootd.fnal.gov/${InputMiniAODFile} ${PWD}"
 
 # Update the name of the input file to the local directory
 # InputMiniAODFile=$(basename $InputMiniAODFile)
-InputMiniAODFile=root://xcache.cms.rcac.purdue.edu/${InputMiniAODFile}
+# InputMiniAODFile=root://xcache.cms.rcac.purdue.edu/${InputMiniAODFile}
+InputMiniAODFile=root://cms-xrd-global.cern.ch/${InputMiniAODFile}
+# InputMiniAODFile=root://cmsxrootd.fnal.gov/${InputMiniAODFile}
 
 echo "i am here ${PWD}"
 basePath=${PWD}
@@ -45,7 +48,7 @@ mkdir /tmp/shar1172
 echo "Output nanoAOD file: ${OutputNanoAODFile}"
 
 # Setup Singularity binding and container selection
-export APPTAINER_BINDPATH='/cvmfs,/cvmfs/grid.cern.ch/etc/grid-security:/etc/grid-security,/eos,/etc/pki/ca-trust,/run/user,/var/run/user'
+export APPTAINER_BINDPATH='/cvmfs,/cvmfs/grid.cern.ch/etc/grid-security:/etc/grid-security,/etc/pki/ca-trust,/run/user,/var/run/user'
 
 if [ -e "/cvmfs/unpacked.cern.ch/registry.hub.docker.com/cmssw/el8:amd64" ]; then
   CONTAINER_NAME="el8:amd64"
@@ -67,41 +70,53 @@ singularity exec --no-home /cvmfs/unpacked.cern.ch/registry.hub.docker.com/cmssw
   else
     scram p CMSSW CMSSW_13_0_14
   fi
+  # ls
   cd CMSSW_13_0_14/src
+  pwd
   eval \`scram runtime -sh\`
   cd ../..
   pwd
 
 
   # Run the Python configuration file with arguments (if supported by the config)
-  echo Running cmsRun ${ConfigFile} inputFiles=file:${InputMiniAODFile} outputFile=file:/tmp/shar1172/${OutputNanoAODFile} maxEvents=${maxEvents}
-  cmsRun ${ConfigFile} inputFiles=file:${InputMiniAODFile} outputFile=file:/tmp/shar1172/${OutputNanoAODFile} maxEvents=${maxEvents}
+  echo Running command: cmsRun ${ConfigFile} inputFiles=file:${InputMiniAODFile} outputFile=///tmp/${OutputNanoAODFile} maxEvents=${maxEvents}
+  cmsRun ${ConfigFile} inputFiles=file:${InputMiniAODFile} outputFile=///tmp/${OutputNanoAODFile} maxEvents=${maxEvents}
 "
 
 echo "Job is finished on " `date`
 echo "###################################################"
 
 echo "Listing files in the current directory:"
-ls -ltr
+# ls -ltr
+echo "Listing files in the /tmp directory:"
+# ls -ltr /tmp
 echo "###################################################"
 
 # Create output directory if it does not exist
 echo "###################################################"
 
 # Check if the output file is created, then copy it; if not, try alternative file name patterns
-if [ -f /tmp/shar1172/${OutputNanoAODFile} ]; then
-    echo "xrdcp -f /tmp/shar1172/${OutputNanoAODFile} ${OutputDir}/${OutputNanoAODFile}"
-    xrdcp -f /tmp/shar1172/${OutputNanoAODFile} ${OutputDir}/${OutputNanoAODFile}
+if [ -f /tmp/${OutputNanoAODFile} ]; then
+    echo "xrdcp -f /tmp/${OutputNanoAODFile} ${OutputDir}/${OutputNanoAODFile}"
+    xrdcp -f /tmp/${OutputNanoAODFile} ${OutputDir}/${OutputNanoAODFile}
 else
     OutputNanoAODfile_noext=${OutputNanoAODFile%.root}
-    if ls /tmp/shar1172/${OutputNanoAODfile_noext}*.root 1> /dev/null 2>&1; then
-        echo "xrdcp -f /tmp/shar1172/${OutputNanoAODfile_noext}*.root ${OutputDir}/${OutputNanoAODFile}"
-        xrdcp -f /tmp/shar1172/${OutputNanoAODfile_noext}*.root ${OutputDir}/${OutputNanoAODFile}
+    if ls /tmp/${OutputNanoAODfile_noext}*.root 1> /dev/null 2>&1; then
+        echo "xrdcp -f /tmp/${OutputNanoAODfile_noext}*.root ${OutputDir}/${OutputNanoAODFile}"
+        xrdcp -f /tmp/${OutputNanoAODfile_noext}*.root ${OutputDir}/${OutputNanoAODFile}
     else
-        echo "Error: /tmp/shar1172/${OutputNanoAODFile} is not created"
+        echo "Error: ${OutputNanoAODFile} is not created"
         echo "Listing files in the current directory:"
-        ls -ltr
+        # ls -ltr
     fi
 fi
+
+echo "###################################################"
+echo "Deleting the output file from the /tmp directory"
+rm -f /tmp/${OutputNanoAODFile}
+rm -f /tmp/${OutputNanoAODfile_noext}*.root
+echo "Listing files in the /tmp directory:"
+# ls -ltr /tmp
+echo "###################################################"
 
 echo "Ending job on " `date`

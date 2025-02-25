@@ -12,3 +12,4 @@ voms_proxy.txt
 *.out
 *.sub
 env*/
+venv/*
