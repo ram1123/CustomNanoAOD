@@ -25,14 +25,29 @@ maxEvents=$6
 
 
 echo "Copy the input file to the local directory"
-# echo "xrdcp  root://cms-xrd-global.cern.ch/${InputMiniAODFile} ${PWD}"
-# xrdcp  root://cms-xrd-global.cern.ch/${InputMiniAODFile} ${PWD}
-echo "xrdcp  root://cmsxrootd.fnal.gov/${InputMiniAODFile} ${PWD}"
+# echo "xrdcp -f   root://cms-xrd-global.cern.ch/${InputMiniAODFile} ${PWD}"
+# xrdcp -f root://cms-xrd-global.cern.ch/${InputMiniAODFile} ${PWD}
+# echo "xrdcp  root://cmsxrootd.fnal.gov/${InputMiniAODFile} ${PWD}"
+echo "xrdcp root://xcache.cms.rcac.purdue.edu/${InputMiniAODFile} ${PWD}"
+xrdcp -f  root://xcache.cms.rcac.purdue.edu/${InputMiniAODFile} /dev/null
+# $? not zero then try again xrdcp
+if [ $? -ne 0 ]; then
+    echo "xrdcp failed, try again"
+    xrdcp -f  root://xcache.cms.rcac.purdue.edu/${InputMiniAODFile} /dev/null
+    if [ $? -ne 0 ]; then
+        echo "xrdcp failed again, try again"
+        xrdcp -f  root://xcache.cms.rcac.purdue.edu/${InputMiniAODFile} /dev/null
+        if [ $? -ne 0 ]; then
+          echo "xrdcp failed again, exit"
+          exit 1
+        fi
+    fi
+fi
 
 # Update the name of the input file to the local directory
 # InputMiniAODFile=$(basename $InputMiniAODFile)
-# InputMiniAODFile=root://xcache.cms.rcac.purdue.edu/${InputMiniAODFile}
-InputMiniAODFile=root://cms-xrd-global.cern.ch/${InputMiniAODFile}
+InputMiniAODFile=root://xcache.cms.rcac.purdue.edu/${InputMiniAODFile}
+# InputMiniAODFile=root://cms-xrd-global.cern.ch/${InputMiniAODFile}
 # InputMiniAODFile=root://cmsxrootd.fnal.gov/${InputMiniAODFile}
 
 echo "i am here ${PWD}"
@@ -41,9 +56,13 @@ basePath=${PWD}
 # Determine output file name from input file; you might modify this logic as needed.
 OutputNanoAODFile=$(basename $InputMiniAODFile)
 OutputNanoAODFile=${OutputNanoAODFile/.root/_NanoAOD.root} # Replace .root with _NanoAOD.root
+# OutputNanoAODFile=${InputMiniAODFile/.root/_NanoAOD.root} # Replace .root with _NanoAOD.root
 # create directory if not exists
-mkdir /tmp/shar1172
+# mkdir /tmp/shar1172
 # OutputNanoAODFile=/tmp/shar1172/${OutputNanoAODFile}
+
+
+
 
 echo "Output nanoAOD file: ${OutputNanoAODFile}"
 
@@ -87,9 +106,9 @@ echo "Job is finished on " `date`
 echo "###################################################"
 
 echo "Listing files in the current directory:"
-# ls -ltr
+ls -ltr *.root
 echo "Listing files in the /tmp directory:"
-# ls -ltr /tmp
+ls -ltr /tmp/*.root
 echo "###################################################"
 
 # Create output directory if it does not exist
@@ -97,13 +116,26 @@ echo "###################################################"
 
 # Check if the output file is created, then copy it; if not, try alternative file name patterns
 if [ -f /tmp/${OutputNanoAODFile} ]; then
-    echo "xrdcp -f /tmp/${OutputNanoAODFile} ${OutputDir}/${OutputNanoAODFile}"
-    xrdcp -f /tmp/${OutputNanoAODFile} ${OutputDir}/${OutputNanoAODFile}
+    echo "=== checksum before trasnfer ==="
+    xrdadler32 /tmp/${OutputNanoAODFile}
+    echo "=== checksum END ==="
+    echo "xrdcp -f -d 2 /tmp/${OutputNanoAODFile} ${OutputDir}/${OutputNanoAODFile}"
+    xrdcp -f  /tmp/${OutputNanoAODFile} ${OutputDir}/${OutputNanoAODFile}
+    echo "=== checksum after transfer ==="
+    xrdadler32 ${OutputDir}/${OutputNanoAODFile}
+    echo "=== checksum END ==="
 else
     OutputNanoAODfile_noext=${OutputNanoAODFile%.root}
+    echo "=== checksum before transfer ==="
+    xrdadler32 /tmp/${OutputNanoAODfile_noext}
+    echo "=== checksum END ==="
     if ls /tmp/${OutputNanoAODfile_noext}*.root 1> /dev/null 2>&1; then
-        echo "xrdcp -f /tmp/${OutputNanoAODfile_noext}*.root ${OutputDir}/${OutputNanoAODFile}"
-        xrdcp -f /tmp/${OutputNanoAODfile_noext}*.root ${OutputDir}/${OutputNanoAODFile}
+        echo "xrdcp -f -d 2 /tmp/${OutputNanoAODfile_noext}*.root ${OutputDir}/${OutputNanoAODFile}"
+        # xrdcp -f -d 2 /tmp/${OutputNanoAODfile_noext}*.root ${OutputDir}/${OutputNanoAODFile}
+        xrdcp -f  /tmp/${OutputNanoAODfile_noext}*.root ${OutputDir}/${OutputNanoAODFile}
+        echo "=== checksum after transfer ==="
+        xrdadler32 ${OutputDir}/${OutputNanoAODFile}
+        echo "=== checksum END ==="
     else
         echo "Error: ${OutputNanoAODFile} is not created"
         echo "Listing files in the current directory:"
