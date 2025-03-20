@@ -22,9 +22,9 @@ parser.add_argument(
 # add only two options: 1. eos redirector and 2. for global redirector
 parser.add_argument(
     "--eos_redirector",
-    type=int,
-    default=2,
-    choices=[1, 2, 3],
+    type=str,
+    default="purdue",
+    choices=["cern", "purdue", "global"],
     help="""EOS redirector:
                                                             1. EOS redirectory: root://eosuser.cern.ch/
                                                             2. Purdue redirector: root://eos.cms.rcac.purdue.edu/
@@ -78,9 +78,9 @@ TopLogDirectory = args.TopLogDirectory
 outputDirName = args.output_dir_name
 CondorQueue = args.condor_queue
 queue = args.queue
-if args.eos_redirector == 1:
+if args.eos_redirector == "cern":
     xrd_redirector = "root://eosuser.cern.ch/"
-elif args.eos_redirector == 2:
+elif args.eos_redirector == "purdue":
     xrd_redirector = "root://eos.cms.rcac.purdue.edu/"
 else:
     xrd_redirector = "root://cms-xrd-global.cern.ch/"
