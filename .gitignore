@@ -1,7 +1,15 @@
+*.log
+x509*
+*.csv
+*.bak
+test*
+*.txt
 CMSSW_10_6_26/
 CMSSW_10_6_30/
 CMSSW_13_0_14/
 nanoAODv11/
+crab_projects/
+crab_projects_ul18/
 voms_proxy.txt
 *.root
 *.err

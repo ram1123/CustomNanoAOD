@@ -35,57 +35,10 @@ conda activate /depot/cms/kernels/python3
 source /cvmfs/cms.cern.ch/cmsset_default.sh
 echo "###################################################"
 
-# Step -1: Note the adler32 checksum of the input file from the DAS
-echo "------------------------------------------------"
-echo "adler32 checksum value from dasgoclient"
-dasgoclient --query="file=${InputMiniAODFile}" --json
-echo "------------------------------------------------"
 
-# Step -2: Check the adler32 checksum of the input file
-echo "------------------------------------------------"
-echo "adler32 checksum value direcoty from /store file"
-echo "From xcache: (Used by the code)"
-xrdadler32 root://xcache.cms.rcac.purdue.edu/${InputMiniAODFile}
-echo "From global: (As cross-check)"
-xrdadler32 root://cms-xrd-global.cern.ch/${InputMiniAODFile}
-echo "From FNAL: (As cross-check)"
-xrdadler32 root://cmsxrootd.fnal.gov/${InputMiniAODFile}
-echo "------------------------------------------------"
-
-
-echo "Copy the input file to the local directory"
-xcacheCopyCommand="xrdcp -f --retry 3 root://xcache.cms.rcac.purdue.edu/${InputMiniAODFile} /dev/null"
-globalCopyCommand="xrdcp -f --retry 3 root://cms-xrd-global.cern.ch/${InputMiniAODFile} /dev/null"
-fnalCopyCommand="xrdcp -f --retry 3  root://cmsxrootd.fnal.gov/${InputMiniAODFile} /dev/null"
-
-# Print the copy commands
-echo "XCache copy command: ${xcacheCopyCommand}"
-echo "Global copy command: ${globalCopyCommand}"
-echo "FNAL copy command: ${fnalCopyCommand}"
-
-# Execute the copy command (Choose the appropriate one)
-echo "Executing xcache copy command..."
-${xcacheCopyCommand}
-exitStatus=$?
-echo "Exit status of copy command: ${exitStatus}"
-
-# Retry logic for xrdcp command if it fails
-if [ $exitStatus -ne 0 ]; then
-    echo "xrdcp failed, trying again..."
-    xrdcp -f root://xcache.cms.rcac.purdue.edu/${InputMiniAODFile} /dev/null
-    if [ $? -ne 0 ]; then
-        echo "xrdcp failed again, retrying..."
-        xrdcp -f root://xcache.cms.rcac.purdue.edu/${InputMiniAODFile} /dev/null
-        if [ $? -ne 0 ]; then
-          echo "xrdcp failed multiple times, exiting job"
-          exit 1
-        fi
-    fi
-fi
-
-# add xcache redirector to the input file
-InputMiniAODFile=root://xcache.cms.rcac.purdue.edu/${InputMiniAODFile}
-# InputMiniAODFile=root://cms-xrd-global.cern.ch/${InputMiniAODFile}
+# add /depot path redirector to the input file
+# InputMiniAODFile=root://xcache.cms.rcac.purdue.edu/${InputMiniAODFile}
+InputMiniAODFile=/depot/cms/hmm/shar1172/${InputMiniAODFile}
 echo "Input MiniAOD file after adding xcache redirector: ${InputMiniAODFile}"
 
 # Determine the output file name from the input file
@@ -130,9 +83,6 @@ singularity exec --no-home /cvmfs/unpacked.cern.ch/registry.hub.docker.com/cmssw
   python compare_miniAOD_nanoAOD_totalEvents.py ${InputMiniAODFile} ///tmp/${OutputNanoAODFile}
   echo "------------------------------------------------"
 "
-
-echo "From xcache: (Used by the code, checksum of miniAOD after cmsRun)"
-xrdadler32 root://xcache.cms.rcac.purdue.edu/${InputMiniAODFile}
 
 # Final steps: checksum verification and file transfer
 if [ -f /tmp/${OutputNanoAODFile} ]; then

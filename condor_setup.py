@@ -130,6 +130,8 @@ with condor_txt_path.open("w") as fout:
     isMC = False
     # Loop over all the keys in the YAML file
     # for Era in data.keys():
+    print("===> data: ", data)
+    print("===> Year: ", args.year)
     for sample in data[args.year]:
         Era = args.year
         print("Era: {}, sample: {}, isMC: {}".format(Era, sample, isMC))
@@ -169,7 +171,7 @@ with condor_txt_path.open("w") as fout:
         cmd = f'dasgoclient --query="parent dataset={sample}"'
         try:
             sample_miniAOD = subprocess.check_output(cmd, shell=True).decode()
-            print("sample_miniAOD:{}___".format(sample_miniAOD.split()[0]))
+            print("sample_miniAOD:{}".format(sample_miniAOD.split()[0]))
         except subprocess.CalledProcessError as e:
             print(f"Error: dasgoclient query failed: {e}")
             exit(1)

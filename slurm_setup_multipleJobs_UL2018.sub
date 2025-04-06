@@ -1,15 +1,15 @@
 #!/bin/bash
 #SBATCH --job-name=nanoAOD_array       # Name of the job array
-#SBATCH --output=/home/shar1172/CustomNanoAOD/logs_differnt_nevent_UL2018_18March/nanoAOD_%A_%a.out   # Output file for each task (%A is the job array ID, %a is the task ID)
-#SBATCH --error=/home/shar1172/CustomNanoAOD/logs_differnt_nevent_UL2018_18March/nanoAOD_%A_%a.err    # Error file for each task
+#SBATCH --output=/home/shar1172/CustomNanoAOD/logs_MC_UL2018_31March/nanoAOD_%A_%a.out   # Output file for each task (%A is the job array ID, %a is the task ID)
+#SBATCH --error=/home/shar1172/CustomNanoAOD/logs_MC_UL2018_31March/nanoAOD_%A_%a.err    # Error file for each task
 #SBATCH --account=cms
 #SBATCH --partition=cpu
 #SBATCH --qos=standby
-#SBATCH --array=1-100                    # Task array range (modify this according to your input file count) # Total 5390 files
+#SBATCH --array=1510-1959                    # 1510 - 1959
 #SBATCH --ntasks=1                     # Number of tasks per job
 #SBATCH --cpus-per-task=1              # Number of CPUs per task
 #SBATCH --mem=8000                    # Memory per task
-#SBATCH --time=10:00:00                # Max run time for each task (HH:MM:SS)
+#SBATCH --time=5:00:00                # Max run time for each task (HH:MM:SS)
 #SBATCH --get-user-env                 # Get environment variables for the job
 
 
