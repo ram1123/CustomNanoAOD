@@ -121,8 +121,8 @@ singularity exec --no-home /cvmfs/unpacked.cern.ch/registry.hub.docker.com/cmssw
   eval \`scram runtime -sh\`
   cd ../..
   echo 'Running cmsRun for the given config file'
-  echo cmsRun ${ConfigFile} inputFiles=file:${InputMiniAODFile} outputFile=///tmp/${OutputNanoAODFile} maxEvents=${maxEvents}
-  cmsRun ${ConfigFile} inputFiles=file:${InputMiniAODFile} outputFile=///tmp/${OutputNanoAODFile} maxEvents=${maxEvents}
+  echo cmsRun HMuMu/${ConfigFile} inputFiles=file:${InputMiniAODFile} outputFile=///tmp/${OutputNanoAODFile} maxEvents=${maxEvents}
+  cmsRun HMuMu/${ConfigFile} inputFiles=file:${InputMiniAODFile} outputFile=///tmp/${OutputNanoAODFile} maxEvents=${maxEvents}
   echo "CMSRun finished with exit code: $?"
   echo "------------------------------------------------"
   echo "Comparing MiniAOD and NanoAOD files"

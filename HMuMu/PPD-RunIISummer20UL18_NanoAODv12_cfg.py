@@ -1,7 +1,7 @@
 # Auto generated configuration file
-# using: 
-# Revision: 1.19 
-# Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
+# using:
+# Revision: 1.19
+# Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v
 # with command line options: --python_filename PPD-RunIISummer20UL18_NanoAODv12_cfg.py --eventcontent NANOAODSIM --customise Configuration/DataProcessing/Utils.addMonitoring --datatier NANOAODSIM --fileout file:PPD-RunIISummer20UL18_NanoAODv12.root --conditions 106X_upgrade2018_realistic_v16_L1v1 --step NANO --scenario pp --filein /store/mc/RunIISummer20UL18MiniAODv2/DYJetsToLL_0J_MLL_1400_2300_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/106X_upgrade2018_realistic_v16_L1v1-v3/40000/1D68BF65-D234-5F4E-B922-81ADBA88C361.root --era Run2_2018,run2_nanoAOD_106Xv2 --no_exec --mc -n -1
 import FWCore.ParameterSet.Config as cms
 
@@ -89,7 +89,7 @@ process.NANOAODSIMoutput = cms.OutputModule("NanoAODOutputModule",
         dataTier = cms.untracked.string('NANOAODSIM'),
         filterName = cms.untracked.string('')
     ),
-    fileName = cms.untracked.string('file:'+options.outputFile),
+    fileName = cms.untracked.string(options.outputFile),
     outputCommands = process.NANOAODSIMEventContent.outputCommands
 )
 
@@ -112,13 +112,13 @@ associatePatAlgosToolsTask(process)
 # customisation of the process.
 
 # Automatic addition of the customisation function from PhysicsTools.NanoAOD.nano_cff
-from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeCommon 
+from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeCommon
 
 #call to customisation function nanoAOD_customizeCommon imported from PhysicsTools.NanoAOD.nano_cff
 process = nanoAOD_customizeCommon(process)
 
 # Automatic addition of the customisation function from Configuration.DataProcessing.Utils
-from Configuration.DataProcessing.Utils import addMonitoring 
+from Configuration.DataProcessing.Utils import addMonitoring
 
 #call to customisation function addMonitoring imported from Configuration.DataProcessing.Utils
 process = addMonitoring(process)
