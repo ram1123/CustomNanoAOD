@@ -38,19 +38,9 @@ echo "###################################################"
 # Step -1: Note the adler32 checksum of the input file from the DAS
 echo "------------------------------------------------"
 echo "adler32 checksum value from dasgoclient"
-dasgoclient --query="file=${InputMiniAODFile}" --json
+# dasgoclient --query="file=${InputMiniAODFile}" --json
 echo "------------------------------------------------"
 
-# Step -2: Check the adler32 checksum of the input file
-echo "------------------------------------------------"
-echo "adler32 checksum value direcoty from /store file"
-echo "From xcache: (Used by the code)"
-xrdadler32 root://xcache.cms.rcac.purdue.edu/${InputMiniAODFile}
-echo "From global: (As cross-check)"
-xrdadler32 root://cms-xrd-global.cern.ch/${InputMiniAODFile}
-echo "From FNAL: (As cross-check)"
-xrdadler32 root://cmsxrootd.fnal.gov/${InputMiniAODFile}
-echo "------------------------------------------------"
 
 
 echo "Copy the input file to the local directory"
@@ -69,19 +59,30 @@ ${xcacheCopyCommand}
 exitStatus=$?
 echo "Exit status of copy command: ${exitStatus}"
 
+# Step -2: Check the adler32 checksum of the input file
+echo "------------------------------------------------"
+echo "adler32 checksum value direcoty from /store file"
+echo "From xcache: (Used by the code)"
+xrdadler32 root://xcache.cms.rcac.purdue.edu/${InputMiniAODFile}
+# echo "From global: (As cross-check)"
+# xrdadler32 root://cms-xrd-global.cern.ch/${InputMiniAODFile}
+# echo "From FNAL: (As cross-check)"
+# xrdadler32 root://cmsxrootd.fnal.gov/${InputMiniAODFile}
+echo "------------------------------------------------"
+
 # Retry logic for xrdcp command if it fails
-if [ $exitStatus -ne 0 ]; then
-    echo "xrdcp failed, trying again..."
-    xrdcp -f root://xcache.cms.rcac.purdue.edu/${InputMiniAODFile} /dev/null
-    if [ $? -ne 0 ]; then
-        echo "xrdcp failed again, retrying..."
-        xrdcp -f root://xcache.cms.rcac.purdue.edu/${InputMiniAODFile} /dev/null
-        if [ $? -ne 0 ]; then
-          echo "xrdcp failed multiple times, exiting job"
-          exit 1
-        fi
-    fi
-fi
+# if [ $exitStatus -ne 0 ]; then
+#     echo "xrdcp failed, trying again..."
+#     xrdcp -f root://xcache.cms.rcac.purdue.edu/${InputMiniAODFile} /dev/null
+#     if [ $? -ne 0 ]; then
+#         echo "xrdcp failed again, retrying..."
+#         xrdcp -f root://xcache.cms.rcac.purdue.edu/${InputMiniAODFile} /dev/null
+#         if [ $? -ne 0 ]; then
+#           echo "xrdcp failed multiple times, exiting job"
+#           exit 1
+#         fi
+#     fi
+# fi
 
 # add xcache redirector to the input file
 InputMiniAODFile=root://xcache.cms.rcac.purdue.edu/${InputMiniAODFile}
@@ -108,6 +109,7 @@ fi
 
 export SINGULARITY_CACHEDIR="/tmp/$(whoami)/singularity"
 
+echo "Input MiniAOD file  before singularity: ${InputMiniAODFile}"
 # Execute the job inside the Singularity container
 singularity exec --no-home /cvmfs/unpacked.cern.ch/registry.hub.docker.com/cmssw/$CONTAINER_NAME /bin/bash -c "
   export SCRAM_ARCH=el8_amd64_gcc11
@@ -157,8 +159,8 @@ else
 fi
 
 # Clean up temporary files
-echo "Deleting the output file from the /tmp directory"
-rm -f /tmp/${OutputNanoAODFile}
-rm -f /tmp/${OutputNanoAODfile_noext}*.root
+# echo "Deleting the output file from the /tmp directory"
+# rm -f /tmp/${OutputNanoAODFile}
+# rm -f /tmp/${OutputNanoAODfile_noext}*.root
 
 echo "Job finished at $(date)"
