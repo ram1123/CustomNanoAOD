@@ -19,3 +19,14 @@ This framework is developed to get the custom NanoAODv12 for the HMuMu analysis.
     python3 condor_setup.py --condor_executable HMuMu_UL2018_NanoAODv12_MissingSamples --yaml HMuMu_DY_Samples.yaml --year UL2018 --output_dir_name /store/user/rasharma/Run2_CustomNanoAODv12
     ```
 
+    Once you get the .txt file you can setup the slurm job and submit it to the cluster.
+
+# Slurm commands summary
+
+1. Submit a job: `sbatch <job_file>.sub`
+2. Check the status of a job: `squeue -u <username>`
+3. Cancel a job: `scancel <job_id>`
+4. Check the job history: `sacct -u <username> --starttime <start_time> --endtime <end_time>`
+5. Check the job details: `scontrol show job <job_id>`
+6. Check the job resource usage: `sstat -j <job_id> --format="JobID,MaxRSS,MaxVMSize,MaxDiskRead,MaxDiskWrite"`
+
