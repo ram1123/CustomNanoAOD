@@ -1,5 +1,8 @@
 #!/bin/bash
-
+# Prevent XALT from interfering with GLIBC
+unset LD_PRELOAD
+unset XALT_EXECUTABLE_TRACKING
+unset XALT_RUN_NOXALT
 echo "Job started..."
 echo "Starting job on $(date)"
 echo "Running on: $(uname -a)"
@@ -24,21 +27,11 @@ OutputDir=$5
 maxEvents=$6
 
 echo "###################################################"
-echo "#   Setup environment                            "
-# Setup conda and fetch python3 environment
-source /etc/profile.d/modules.sh
-module --force purge
-module load conda/2024.09
-conda activate /depot/cms/kernels/python3
-
-# Setup CMSSW environment & related commands
-source /cvmfs/cms.cern.ch/cmsset_default.sh
-echo "###################################################"
 
 # Step -1: Note the adler32 checksum of the input file from the DAS
 echo "------------------------------------------------"
 echo "adler32 checksum value from dasgoclient"
-# dasgoclient --query="file=${InputMiniAODFile}" --json
+dasgoclient --query="file=${InputMiniAODFile}" --json
 echo "------------------------------------------------"
 
 
@@ -52,12 +45,6 @@ fnalCopyCommand="xrdcp -f --retry 3  root://cmsxrootd.fnal.gov/${InputMiniAODFil
 echo "XCache copy command: ${xcacheCopyCommand}"
 echo "Global copy command: ${globalCopyCommand}"
 echo "FNAL copy command: ${fnalCopyCommand}"
-
-# Execute the copy command (Choose the appropriate one)
-echo "Executing xcache copy command..."
-${xcacheCopyCommand}
-exitStatus=$?
-echo "Exit status of copy command: ${exitStatus}"
 
 # Step -2: Check the adler32 checksum of the input file
 echo "------------------------------------------------"
@@ -122,6 +109,15 @@ singularity exec --no-home /cvmfs/unpacked.cern.ch/registry.hub.docker.com/cmssw
   cd CMSSW_13_0_14/src
   eval \`scram runtime -sh\`
   cd ../..
+  echo 'Executing xcache copy command...'
+  echo 'xcacheCopyCommand: ${xcacheCopyCommand}'
+  ${xcacheCopyCommand}
+  exitStatus=$?
+  echo 'Exit status of copy command: ${exitStatus}'
+  if [ $exitStatus -ne 0 ]; then
+    echo 'xrdcp failed inside Singularity. Exiting.'
+    exit 1
+  fi
   echo 'Running cmsRun for the given config file'
   echo cmsRun HMuMu/${ConfigFile} inputFiles=file:${InputMiniAODFile} outputFile=///tmp/${OutputNanoAODFile} maxEvents=${maxEvents}
   cmsRun HMuMu/${ConfigFile} inputFiles=file:${InputMiniAODFile} outputFile=///tmp/${OutputNanoAODFile} maxEvents=${maxEvents}
@@ -133,8 +129,6 @@ singularity exec --no-home /cvmfs/unpacked.cern.ch/registry.hub.docker.com/cmssw
   echo "------------------------------------------------"
 "
 
-echo "From xcache: (Used by the code, checksum of miniAOD after cmsRun)"
-xrdadler32 root://xcache.cms.rcac.purdue.edu/${InputMiniAODFile}
 
 # Final steps: checksum verification and file transfer
 if [ -f /tmp/${OutputNanoAODFile} ]; then
@@ -147,6 +141,7 @@ if [ -f /tmp/${OutputNanoAODFile} ]; then
 else
     echo "NanoAOD file not created. Checking for variations..."
     OutputNanoAODfile_noext=${OutputNanoAODFile%.root}
+    echo "Checksum before transfer:"
     xrdadler32 /tmp/${OutputNanoAODfile_noext}
     if ls /tmp/${OutputNanoAODfile_noext}*.root 1> /dev/null 2>&1; then
         echo "xrdcp -f /tmp/${OutputNanoAODfile_noext}*.root ${OutputDir}/${OutputNanoAODFile}"
