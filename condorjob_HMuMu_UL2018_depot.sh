@@ -37,8 +37,7 @@ echo "###################################################"
 
 
 # add /depot path redirector to the input file
-# InputMiniAODFile=root://xcache.cms.rcac.purdue.edu/${InputMiniAODFile}
-InputMiniAODFile=/depot/cms/hmm/shar1172/${InputMiniAODFile}
+InputMiniAODFile=/depot/cms/hmm/shar1172/FailedJobsMiniAODRootFiles/${InputMiniAODFile}
 echo "Input MiniAOD file after adding xcache redirector: ${InputMiniAODFile}"
 
 # Determine the output file name from the input file
@@ -74,8 +73,8 @@ singularity exec --no-home /cvmfs/unpacked.cern.ch/registry.hub.docker.com/cmssw
   eval \`scram runtime -sh\`
   cd ../..
   echo 'Running cmsRun for the given config file'
-  echo cmsRun ${ConfigFile} inputFiles=file:${InputMiniAODFile} outputFile=///tmp/${OutputNanoAODFile} maxEvents=${maxEvents}
-  cmsRun ${ConfigFile} inputFiles=file:${InputMiniAODFile} outputFile=///tmp/${OutputNanoAODFile} maxEvents=${maxEvents}
+  echo cmsRun HMuMu/${ConfigFile} inputFiles=file:${InputMiniAODFile} outputFile=///tmp/${OutputNanoAODFile} maxEvents=${maxEvents}
+  cmsRun HMuMu/${ConfigFile} inputFiles=file:${InputMiniAODFile} outputFile=///tmp/${OutputNanoAODFile} maxEvents=${maxEvents}
   echo "CMSRun finished with exit code: $?"
   echo "------------------------------------------------"
   echo "Comparing MiniAOD and NanoAOD files"
