@@ -1,4 +1,4 @@
-sh_file_template = '''#!/bin/bash
+sh_file_template = r'''#!/bin/bash
 
 echo "{test}"
 echo "Starting job on " `date`
@@ -71,7 +71,14 @@ fi
 echo "Ending job on " `date`
 '''
 
-sh_file_template_HMuMu = """#!/bin/bash
+sh_file_template_HMuMu = r"""#!/bin/bash
+
+set -euo pipefail
+
+# Prevent XALT / LD_PRELOAD issues on Gautschi login and worker nodes
+unset LD_PRELOAD
+unset XALT_EXECUTABLE_TRACKING
+unset XALT_RUN_NOXALT
 
 echo "Job started..."
 echo "Starting job on " `date`
@@ -84,66 +91,89 @@ echo "###################################################"
 echo "Input Arguments (Cluster ID): $1"
 echo "Input Arguments (Proc ID): $2"
 echo "Input Arguments (Python Config File): $3"
-echo "Input Arguments (Input MiniAOD File): $4"
+echo "Input Arguments (Input MiniAOD Files): $4"
 echo "Input Arguments (Output Directory): $5"
+echo "Input Arguments (Output File): $6"
+echo "Input Arguments (#Events): $7"
+echo "Input Arguments (Input Redirector): $8"
 
 # Positional parameters
 ClusterID=$1
 ProcID=$2
 ConfigFile=$3
-InputMiniAODFile=$4
+InputMiniAODFiles=$4
 OutputDir=$5
+OutputNanoAODFile=$6
 
 # Optional max events; default is -1 (all events)
-maxEvents=$6
-
-echo "Copy the input file to the local directory"
-echo "xrdcp  root://cms-xrd-global.cern.ch/${{InputMiniAODFile}} ${{PWD}}"
-xrdcp  root://cms-xrd-global.cern.ch/${{InputMiniAODFile}} ${{PWD}}
-
-# Update the name of the input file to the local directory
-InputMiniAODFile=$(basename $InputMiniAODFile)
+maxEvents=$7
+InputRedirector=$8
 
 echo "i am here ${{PWD}}"
 basePath=${{PWD}}
 
-# Determine output file name from input file; you might modify this logic as needed.
-OutputNanoAODFile=$(basename $InputMiniAODFile)
-OutputNanoAODFile=${{OutputNanoAODFile/.root/_NanoAOD.root}} # Replace .root with _NanoAOD.root
-
-# Setup Singularity binding and container selection
-export APPTAINER_BINDPATH='/afs,/cvmfs,/cvmfs/grid.cern.ch/etc/grid-security:/etc/grid-security,/eos,/etc/pki/ca-trust,/run/user,/var/run/user'
-
-if [ -e "/cvmfs/unpacked.cern.ch/registry.hub.docker.com/cmssw/el8:amd64" ]; then
-  CONTAINER_NAME="el8:amd64"
-elif [ -e "/cvmfs/unpacked.cern.ch/registry.hub.docker.com/cmssw/el8:x86_64" ]; then
-  CONTAINER_NAME="el8:x86_64"
+if [ -f "${{ConfigFile}}" ]; then
+  ResolvedConfigFile="${{ConfigFile}}"
+elif [ -f "HMuMu/${{ConfigFile}}" ]; then
+  ResolvedConfigFile="HMuMu/${{ConfigFile}}"
+elif [ -f "cmssw_modified_config_files/${{ConfigFile}}" ]; then
+  ResolvedConfigFile="cmssw_modified_config_files/${{ConfigFile}}"
+elif [ -f "cmssw_default_config_files/${{ConfigFile}}" ]; then
+  ResolvedConfigFile="cmssw_default_config_files/${{ConfigFile}}"
 else
-  echo "Could not find amd64 or x86_64 for el8"
+  echo "Error: could not locate config file ${{ConfigFile}}"
   exit 1
 fi
+echo "Resolved config file: ${{ResolvedConfigFile}}"
 
-export SINGULARITY_CACHEDIR="/tmp/$(whoami)/singularity"
-
-# Execute the config file inside the container using singularity
-singularity exec --no-home /cvmfs/unpacked.cern.ch/registry.hub.docker.com/cmssw/$CONTAINER_NAME /bin/bash -c "
-  export SCRAM_ARCH=el8_amd64_gcc11
-  source /cvmfs/cms.cern.ch/cmsset_default.sh
-  if [ -r CMSSW_13_0_14/src ] ; then
-    echo release CMSSW_13_0_14 already exists
+IFS=',' read -r -a InputMiniAODArray <<< "${{InputMiniAODFiles}}"
+ResolvedInputFiles=()
+for file in "${{InputMiniAODArray[@]}}"; do
+  if [[ "$file" == root://* ]] || [[ "$file" == file:* ]]; then
+    ResolvedInputFiles+=("$file")
   else
-    scram p CMSSW CMSSW_13_0_14
+    ResolvedInputFiles+=("${{InputRedirector}}${{file}}")
   fi
-  cd CMSSW_13_0_14/src
-  eval \`scram runtime -sh\`
-  cd ../..
-  pwd
+done
 
+CmsRunInputFiles=$(IFS=,; echo "${{ResolvedInputFiles[*]}}")
 
-  # Run the Python configuration file with arguments (if supported by the config)
-  echo Running cmsRun ${{ConfigFile}} inputFiles=file:${{InputMiniAODFile}} outputFile=${{OutputNanoAODFile}} maxEvents=${{maxEvents}}
-  cmsRun ${{ConfigFile}} inputFiles=file:${{InputMiniAODFile}} outputFile=${{OutputNanoAODFile}} maxEvents=${{maxEvents}}
-"
+export SCRAM_ARCH=el8_amd64_gcc12
+export JOB_CMSSW_RELEASE=CMSSW_15_0_15_patch4
+
+echo "Using SCRAM_ARCH=${{SCRAM_ARCH}}"
+echo "Using CMSSW release=${{JOB_CMSSW_RELEASE}}"
+
+source /cvmfs/cms.cern.ch/cmsset_default.sh
+if [ -r ${{JOB_CMSSW_RELEASE}}/src ] ; then
+  echo release ${{JOB_CMSSW_RELEASE}} already exists
+else
+  scram p CMSSW ${{JOB_CMSSW_RELEASE}}
+fi
+cd ${{JOB_CMSSW_RELEASE}}/src
+eval `scram runtime -sh`
+
+if [ -d ../../Configuration ]; then
+  mv ../../Configuration .
+fi
+
+scram b
+cd ../..
+pwd
+
+echo "Running cmsRun ${{ResolvedConfigFile}} inputFiles=${{CmsRunInputFiles}} outputFile=${{OutputNanoAODFile}} maxEvents=${{maxEvents}}"
+cmsRun ${{ResolvedConfigFile}} inputFiles=${{CmsRunInputFiles}} outputFile=${{OutputNanoAODFile}} maxEvents=${{maxEvents}}
+
+echo "cmsRun finished successfully"
+
+ActualOutputFile="${{OutputNanoAODFile}}"
+DerivedCfgOutputFile="$(basename "${{ResolvedConfigFile}}")"
+DerivedCfgOutputFile="${{DerivedCfgOutputFile%_1_cfg.py}}.root"
+
+if [ ! -f "${{ActualOutputFile}}" ] && [ -f "${{DerivedCfgOutputFile}}" ]; then
+  echo "Requested output file was not created directly; using cfg-derived file ${{DerivedCfgOutputFile}}"
+  ActualOutputFile="${{DerivedCfgOutputFile}}"
+fi
 
 echo "Job is finished on " `date`
 echo "###################################################"
@@ -152,21 +182,27 @@ echo "Listing files in the current directory:"
 ls -ltr
 echo "###################################################"
 
-# Create output directory if it does not exist
-[ ! -d "${{OutputDir}}" ] && mkdir -p "${{OutputDir}}"
-echo "Listing files in the output directory: ${{OutputDir}}"
-ls -ltr ${{OutputDir}}
+echo "Remote output target: ${{OutputDir}}/${{OutputNanoAODFile}}"
 echo "###################################################"
 
 # Check if the output file is created, then copy it; if not, try alternative file name patterns
-if [ -f ${{OutputNanoAODFile}} ]; then
-    echo "xrdcp -f ${{OutputNanoAODFile}} ${{OutputDir}}/${{OutputNanoAODFile}}"
-    xrdcp -f ${{OutputNanoAODFile}} ${{OutputDir}}/${{OutputNanoAODFile}}
+if [ -f "${{ActualOutputFile}}" ]; then
+    echo "xrdcp -f ${{ActualOutputFile}} ${{OutputDir}}/${{OutputNanoAODFile}}"
+    xrdcp -f "${{ActualOutputFile}}" "${{OutputDir}}/${{OutputNanoAODFile}}"
+    echo "Removing local file after successful transfer: ${{ActualOutputFile}}"
+    rm -f "${{ActualOutputFile}}"
 else
     OutputNanoAODfile_noext=${{OutputNanoAODFile%.root}}
     if ls ${{OutputNanoAODfile_noext}}*.root 1> /dev/null 2>&1; then
         echo "xrdcp -f ${{OutputNanoAODfile_noext}}*.root ${{OutputDir}}/${{OutputNanoAODFile}}"
         xrdcp -f ${{OutputNanoAODfile_noext}}*.root ${{OutputDir}}/${{OutputNanoAODFile}}
+        echo "Removing local files after successful transfer: ${{OutputNanoAODfile_noext}}*.root"
+        rm -f ${{OutputNanoAODfile_noext}}*.root
+    elif [ -f "${{DerivedCfgOutputFile}}" ]; then
+        echo "xrdcp -f ${{DerivedCfgOutputFile}} ${{OutputDir}}/${{OutputNanoAODFile}}"
+        xrdcp -f "${{DerivedCfgOutputFile}}" "${{OutputDir}}/${{OutputNanoAODFile}}"
+        echo "Removing local file after successful transfer: ${{DerivedCfgOutputFile}}"
+        rm -f "${{DerivedCfgOutputFile}}"
     else
         echo "Error: ${{OutputNanoAODFile}} is not created"
         echo "Listing files in the current directory:"
@@ -190,8 +226,47 @@ getenv      = True
 request_memory = 12000
 request_cpus = 8
 Output = $(CondorLogPath)/log_$(Cluster)_$(Process).stdout
-Error  = $(CondorLogPath)/log_$(Cluster)_$(Process).stdout
-Log  = $(CondorLogPath)/log_$(Cluster)_$(Process).err
-Arguments = $(Cluster) $(Process) $(configFile) $(inputMiniAOD) $(outputDirectory) $(nEvents)
-queue 1 configFile, inputMiniAOD, outputDirectory, nEvents, CondorLogPath from {CondorExecutable}.txt
+Error  = $(CondorLogPath)/log_$(Cluster)_$(Process).stderr
+Log  = $(CondorLogPath)/log_$(Cluster)_$(Process).log
+Arguments = $(Cluster) $(Process) $(configFile) $(inputMiniAOD) $(outputDirectory) $(outputFile) $(nEvents) $(inputRedirector)
+queue 1 configFile, inputMiniAOD, outputDirectory, outputFile, nEvents, CondorLogPath, inputRedirector from {CondorExecutable}.txt
+"""
+
+
+slurm_file_template = """#!/bin/bash
+#SBATCH --job-name={job_name}
+#SBATCH --output={top_log_directory}/nanoAOD_%A_%a.out
+#SBATCH --error={top_log_directory}/nanoAOD_%A_%a.err
+#SBATCH --account={account}
+#SBATCH --partition={partition}
+#SBATCH --qos={qos}
+#SBATCH --array=1-{array_max}%{array_concurrency}
+#SBATCH --ntasks={ntasks}
+#SBATCH --cpus-per-task={cpus_per_task}
+#SBATCH --mem={memory}
+#SBATCH --time={walltime}
+#SBATCH --get-user-env
+#SBATCH --chdir={workdir}
+
+set -euo pipefail
+
+manifest="{manifest_path}"
+payload_script="{payload_script}"
+
+echo "Starting Slurm array job ${{SLURM_ARRAY_JOB_ID:-0}}, task ${{SLURM_ARRAY_TASK_ID}}"
+echo "Running on $(hostname)"
+echo "Working directory: $(pwd)"
+echo "Manifest: $manifest"
+echo "Payload: $payload_script"
+
+line=$(sed -n "${{SLURM_ARRAY_TASK_ID}}p" "$manifest")
+if [ -z "$line" ]; then
+  echo "No manifest entry found for SLURM_ARRAY_TASK_ID=${{SLURM_ARRAY_TASK_ID}}"
+  exit 1
+fi
+
+IFS=$'\t' read -r configFile inputMiniAOD outputDirectory outputFile nEvents CondorLogPath inputRedirector <<< "$line"
+mkdir -p "$CondorLogPath"
+
+bash "$payload_script" "${{SLURM_ARRAY_JOB_ID:-0}}" "$SLURM_ARRAY_TASK_ID" "$configFile" "$inputMiniAOD" "$outputDirectory" "$outputFile" "$nEvents" "$inputRedirector"
 """
