@@ -1,102 +1,271 @@
-# Setup
+# CustomNanoAOD
 
-<!-- ```bash
-cmsrel CMSSW_10_6_30
-cd CMSSW_10_6_30/src
-cmsenv
-git cms-addpkg PhysicsTools
+This repository generates batch submission files for custom NanoAOD production on Purdue Gautschi or Condor. The practical starting point is an McM setup link, which you use to generate a CMSSW python cfg first. After that, this repository handles patching the cfg, wiring it into `config/config_HMuMu.json`, and generating Slurm or Condor submission files.
 
-# copy `NanoTuples` directory from https://github.com/gqlcms/Customized_NanoAOD inside `PhysicsTools` directory
-git clone git@github.com:gqlcms/Customized_NanoAOD.git /tmp/rasharma/Customized_NanoAOD
-cp -r /tmp/rasharma/Customized_NanoAOD/NanoTuples PhysicsTools/
-./PhysicsTools/NanoTuples/scripts/install_onnxruntime.sh
-scram b -j8
-``` -->
+## Setup
 
-## Step - 1: Get current repository
+Clone the repository and prepare the runtime environment:
 
 ```bash
-git clone git@github.com:ram1123/CustomNanoAOD_HHWWgg.git
-cd CustomNanoAOD_HHWWgg
+git clone https://github.com/ram1123/CustomNanoAOD.git -b dev_HMuMu
+cd CustomNanoAOD
+source setup_env.sh
 ```
 
-## Step - 2: Setup CMSSW environment
+`setup_env.sh` does the following:
+
+- activates `/depot/cms/kernels/python3`
+- creates a VOMS proxy in `voms_proxy.txt`
+- exports `X509_USER_PROXY`
+- loads the CMSSW default environment
+
+## End-to-End Flow
+
+The typical workflow is:
+
+1. Start from an McM setup link.
+2. Download the setup script.
+3. Run the setup script to generate the CMSSW python cfg.
+4. Patch the generated cfg so it accepts runtime `inputFiles`, `outputFile`, and `maxEvents`.
+5. Point `config/config_HMuMu.json` to that cfg.
+6. Generate Slurm or Condor submission files with `condor_setup.py`.
+7. Submit jobs and monitor logs.
+
+## Step 1: Download the McM Setup Script
+
+Example:
 
 ```bash
-cmsrel CMSSW_10_6_30
-cd CMSSW_10_6_30/src
-cmsenv
-git cms-merge-topic -u ram1123:CMSSW_10_6_30_HHWWgg_nanoV9
-./PhysicsTools/NanoTuples/scripts/install_onnxruntime.sh
-scramv1 b -j 8
-cd $CMSSW_BASE/../
+curl -L https://cms-pdmv-prod.web.cern.ch/mcm/public/restapi/requests/get_setup/SMP-RunIISummer20UL18NanoAODv15-00034 -o SMP-RunIISummer20UL18NanoAODv15-00034_setup.sh
 ```
 
-## Step - 3: Run custom nanoAOD production
+You can do the same for other prepids such as:
+
+- `SMP-RunIISummer20UL17NanoAODv15-00042`
+- `SMP-RunIISummer20UL18NanoAODv15-00034`
+- `EGM-RunIISummer20UL16NanoAODv15-00001`
+- `EGM-RunIISummer20UL16NanoAODAPVv15-00001`
+
+## Step 2: Run the Setup Script
+
+Run the downloaded setup script to generate the CMSSW python configuration:
 
 ```bash
-voms-proxy-init --voms cms --valid 168:00
-
-cd ${CMSSW_BASE}/src
-cmsenv
-cd ../../
-voms-proxy-init --voms cms --valid 168:00 --out $(pwd)/voms_proxy.txt
-export X509_USER_PROXY=$(pwd)/voms_proxy.txt
-source /cvmfs/cms.cern.ch/cmsset_default.sh
+bash SMP-RunIISummer20UL18NanoAODv15-00034_setup.sh
 ```
 
-# Use the appropriate config file for different years
+This produces the base CMSSW cfg that will later be used by the batch jobs.
+
+## Repository Layout
+
+- `condor_setup.py`: generates `.sh`, `.sub` or `.jdl`, and manifest `.txt` files
+- `config/config_HMuMu.json`: maps year and sample type to the CMSSW config file
+- `HMuMu/`: CMSSW python configs used at runtime
+- `templates/`: shell and batch templates used by the generator
+- `scripts/patch_generated_cmssw_cfg.py`: patches McM-generated configs to support runtime `inputFiles`, `outputFile`, and `maxEvents`
+
+## Step 3: Patch the Generated CMSSW Python File
+
+The generator reads `config/config_HMuMu.json`. Update this file so each year points to the correct CMSSW python config.
+
+Example:
+
+```json
+{
+  "cmsswConfigFileMap_MC": {
+    "UL2018": "HMuMu/SMP-RunIISummer20UL18NanoAODv15-00034_1_cfg.py",
+    "UL2017": "HMuMu/SMP-RunIISummer20UL17NanoAODv15-00042_1_cfg.py",
+    "UL2016": "HMuMu/EGM-RunIISummer20UL16NanoAODv15-00001_1_cfg.py",
+    "UL2016APV": "HMuMu/EGM-RunIISummer20UL16NanoAODAPVv15-00001_1_cfg.py"
+  },
+  "cmsswConfigFileMap_DATA": {},
+  "replacementMap": {
+    "_TuneCP5_PSweights_13TeV-amcatnloFXFX-pythia8": ""
+  }
+}
+```
+
+If you download a fresh McM setup script and generate a CMSSW cfg from it, patch the cfg before using it here:
+
 ```bash
-cmsRun cmssw_modified_config_files/HIG-RunIISummer20UL18NanoAODv9-02546_1_cfg.py maxEvents=-1 inputFiles=/store/mc/RunIISummer20UL18MiniAODv2/GluGluToRadionToHHTo2G2WTo2G4Q_M-1000_TuneCP5_PSWeights_narrow_13TeV-madgraph-pythia8/MINIAODSIM/106X_upgrade2018_realistic_v16_L1v1-v2/50000/04D3FBF0-A539-5143-9A1C-8D42A1D54C88.root  outputFile=HIG-RunIISummer20UL18NanoAODv9-02546.root
+python3 scripts/patch_generated_cmssw_cfg.py HMuMu/SMP-RunIISummer20UL18NanoAODv15-00034_1_cfg.py
 ```
 
-## Condor jobs instruction
+That helper adds:
 
-To create the condor jobs submission script use the script [condor_setup.py](condor_setup.py). This script uses [YAML file](yaml_files/UL2018_XHH_Samples.yaml) having list of samples.
+```python
+from FWCore.ParameterSet.VarParsing import VarParsing
+options = VarParsing('analysis')
+options.parseArguments()
+```
+
+```python
+process.MessageLogger.cerr.FwkReport.reportEvery = cms.untracked.int32(1000)
+```
+
+- runtime replacements for `maxEvents`, `inputFiles`, `annotation`, and `outputFile`
+
+## Step 4: Register the CMSSW Config in `config/config_HMuMu.json`
+
+After patching, update `config/config_HMuMu.json` so each year points to the correct cfg. `condor_setup.py` reads this file to decide which CMSSW python config to pass to the batch jobs.
+
+## Step 5: Generate Batch Files
+
+Check the available options:
 
 ```bash
 python3 condor_setup.py --help
 ```
 
-**NOTE-1:** Check the config file before submitting the jobs: [config.json](config/config.json)
-**NOTE-2:** The condor submission script distinguish between MC and data using the string of DAS name: "MINIAODSIM".
+Supported years:
 
-Some example commands to create the condor jobs submission script.
+- `UL2018`
+- `UL2017`
+- `UL2016`
+- `UL2016APV`
 
-1. Create condor job submissioon script for debug:
+Supported batch systems:
 
-    ```bash
-    python3 condor_setup.py --condor_executable test_new --debug
-    ```
+- `slurm`
+- `condor`
 
-    This will create a condor job submission script named `test_new.sh` and `test_new.jdl` in the current directory, having only one job.
+Supported input modes:
 
-2. Create condor job submissioon script for all samples that belong to UL2018 listed in yaml file [UL2018_XHH_Samples.yaml](yaml_files/UL2018_XHH_Samples.yaml):
+- `txt`: one MiniAOD file per line
+- `yaml`: DAS-driven sample discovery
 
+### Slurm from a Text File
 
-    ```bash
-    python3 condor_setup.py --condor_executable HHWWgg_UL2018 --yaml_file UL2018_XHH_Samples.yaml --year UL2018
-    ```
-
-## Failed condor jobs check and resbumit
-
-[condor_resubmit.py](condor_resubmit.py): This script can be used to resubmit the failed condor jobs. It takes the condor log files as input and resubmits the failed jobs. It can be used as follows:
+This is the recommended workflow for the current NanoAODv15 production.
 
 ```bash
-python condor_resubmit.py -j <condor_jdl_file> -l <log_directory> -o <output_directory> -n <resubmission_count>
-
-# Example command:
-python3 condor_resubmit.py -j HHbbgg_Signal_Mar2024.jdl -l logs/UL2018/EGamma_Run2018A/ -o /eos/user/r/rasharma/post_doc_ihep/double-higgs/nanoAODnTuples/nanoAOD_Mar2024/UL2018/EGamma_Run2018A -n 1
+python3 condor_setup.py \
+  --batch_system slurm \
+  --input_source txt \
+  --input_txt /path/to/DYJets_UL2018.txt \
+  --sample_type mc \
+  --sample_name DYJets_NanoAOD \
+  --files_per_job 1 \
+  --year UL2018 \
+  --input_redirector purdue \
+  --eos_redirector purdue \
+  --output_dir_name /store/user/rasharma/customNanoAODv15/UL2018/ \
+  --condor_executable DYJets_UL2018_slurm \
+  --slurm_mem 16000
 ```
 
-This will give you new jdl file. Then you can submit the new jdl file.
+This creates:
 
+- `DYJets_UL2018_slurm.sh`
+- `DYJets_UL2018_slurm.sub`
+- `DYJets_UL2018_slurm.txt`
 
-# 3 Feb 2022
+Submit with:
 
 ```bash
-python3 -m venv env_jobs_resubmit
-source env_jobs_resubmit/bin/activate
-# Install pandas dataframe
-pip install pandas
+sbatch DYJets_UL2018_slurm.sub
 ```
+
+### Condor from a YAML File
+
+```bash
+python3 condor_setup.py \
+  --batch_system condor \
+  --input_source yaml \
+  --yaml HMuMu_DY_Samples.yaml \
+  --year UL2018 \
+  --output_dir_name /store/user/rasharma/customNanoAODv12 \
+  --condor_executable HMuMu_UL2018
+```
+
+Submit with:
+
+```bash
+condor_submit HMuMu_UL2018.jdl
+```
+
+## Step 6: Submit Jobs
+
+For Slurm:
+
+```bash
+sbatch DYJets_UL2018_slurm.sub
+```
+
+For Condor:
+
+```bash
+condor_submit HMuMu_UL2018.jdl
+```
+
+## Step 7: Logs and Monitoring
+
+Slurm scheduler logs are written under:
+
+```text
+logs/<YEAR>/nanoAOD_<jobid>_<taskid>.out
+logs/<YEAR>/nanoAOD_<jobid>_<taskid>.err
+```
+
+Payload logs are written under:
+
+```text
+logs/<YEAR>/<SAMPLE>/payload_<jobid>_<taskid>.stdout
+logs/<YEAR>/<SAMPLE>/payload_<jobid>_<taskid>.stderr
+```
+
+Useful commands:
+
+```bash
+squeue -u $USER
+sacct -j <jobid> --format=JobID,State,Elapsed,ExitCode
+scontrol show job <jobid>
+tail -F logs/UL2018/nanoAOD_<jobid>_<taskid>.out
+tail -F logs/UL2018/<sample>/payload_<jobid>_<taskid>.stdout
+```
+
+## Resubmitting Failed Slurm Tasks
+
+Inspect failed array tasks:
+
+```bash
+sacct -j <jobid> --format=JobID,State,ExitCode
+```
+
+Create a resubmission file from the original `.sub` and replace the array line with only the failed task IDs:
+
+```bash
+cp DYJets_UL2018_slurm.sub DYJets_UL2018_slurm_resubmit.sub
+```
+
+Then edit:
+
+```text
+#SBATCH --array=1-1000%200
+```
+
+to something like:
+
+```text
+#SBATCH --array=17,42,103%25
+```
+
+and submit:
+
+```bash
+sbatch DYJets_UL2018_slurm_resubmit.sub
+```
+
+For Condor resubmission, use:
+
+```bash
+python3 condor_resubmit.py -j <condor_jdl_file> -l <log_directory> -o <output_directory> -n <resubmission_count>
+```
+
+## Notes
+
+- Regenerate the `.sh`, `.sub`, and manifest `.txt` files whenever you change anything under `templates/` or `config/`.
+- Slurm jobs run in isolated scratch directories under `/tmp/$USER/` to avoid output filename collisions across years or samples.
+- The payload removes the local ROOT file after a successful transfer to EOS.
+- Remote output directories are created automatically when possible.
+- Use real `MiniAOD` or `MiniAODSIM` inputs. A ROOT file having an `Events` tree is not enough if it does not contain the expected `slimmed*` products.
