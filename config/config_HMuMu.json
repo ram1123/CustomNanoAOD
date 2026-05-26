@@ -1,15 +1,12 @@
 {
     "cmsswConfigFileMap_MC": {
-        "UL2018": "HMuMu/PPD-RunIISummer20UL18_NanoAODv12_cfg.py",
-        "UL2017": "HMuMu/PPD-RunIISummer20UL17_NanoAODv12_cfg.py",
-        "UL2016": "HMuMu/PPD-RunIISummer20UL16postVFP_NanoAODv12_cfg.py",
-        "UL2016APV": "HMuMu/PPD-RunIISummer20UL16preVFP_NanoAODv12_cfg.py"
+        "UL2018":"HMuMu/SMP-RunIISummer20UL18NanoAODv15-00034_1_cfg.py",
+        "UL2017": "HMuMu/SMP-RunIISummer20UL17NanoAODv15-00042_1_cfg.py",
+        "UL2016":"HMuMu/SMP-RunIISummer20UL16NanoAODv15-00001_1_cfg.py",
+        "UL2016APV": "HMuMu/SMP-RunIISummer20UL16NanoAODAPVv15-00001_1_cfg.py"
     },
     "cmsswConfigFileMap_DATA": {
-        "UL2018": "HMuMu/PPD-RunIISummer20UL18_NanoAODv12_data_cfg.py",
-        "UL2017": "HMuMu/PPD-RunIISummer20UL17_NanoAODv12_data_cfg.py",
-        "UL2016": "HMuMu/PPD-RunIISummer20UL16postVFP_NanoAODv12_data_cfg.py",
-        "UL2016APV": "HMuMu/PPD-RunIISummer20UL16preVFP_NanoAODv12_data_cfg.py"
+        "UL2017": ""
     },
     "replacementMap": {
         "_TuneCP5_PSWeights_narrow_13TeV-madgraph-pythia8": ""

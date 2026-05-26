@@ -1,3 +1,4 @@
+CMSSW_*/
 *.log
 x509*
 *.csv
