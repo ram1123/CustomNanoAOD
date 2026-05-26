@@ -1,18 +1,14 @@
 # Auto generated configuration file
-# using:
-# Revision: 1.19
-# Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v
-# with command line options: --eventcontent NANOEDMAODSIM --customise Configuration/DataProcessing/Utils.addMonitoring --datatier NANOAODSIM --conditions 150X_mc2017_realistic_v1 --step NANO --era Run2_2017,run2_nanoAOD_106Xv2 --python_filename SMP-RunIISummer20UL17NanoAODv15-00042_1_cfg.py --fileout file:SMP-RunIISummer20UL17NanoAODv15-00042.root --filein dbs:/DYJetsToMuMu_M-10to50_H2ErratumFix_TuneCP5_13TeV-powhegMiNNLO-pythia8-photos/RunIISummer20UL17MiniAODv2-106X_mc2017_realistic_v9-v2/MINIAODSIM --number 100 --number_out 100 --no_exec --mc
+# using: 
+# Revision: 1.19 
+# Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
+# with command line options: --era Run2_2016_HIPM,run2_nanoAOD_106Xv2 --customise Configuration/DataProcessing/Utils.addMonitoring --step NANO --conditions 150X_mcRun2_asymptotic_preVFP_v1 --datatier NANOAODSIM --eventcontent NANOAODSIM --python_filename EGM-RunIISummer20UL16NanoAODAPVv15-00001_1_cfg.py --fileout file:EGM-RunIISummer20UL16NanoAODAPVv15-00001.root --filein dbs:/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8/RunIISummer20UL16MiniAODAPVv2-106X_mcRun2_asymptotic_preVFP_v11-v1/MINIAODSIM --number 1435 --number_out 1435 --no_exec --mc
 import FWCore.ParameterSet.Config as cms
 
-from Configuration.Eras.Era_Run2_2017_cff import Run2_2017
+from Configuration.Eras.Era_Run2_2016_HIPM_cff import Run2_2016_HIPM
 from Configuration.Eras.Modifier_run2_nanoAOD_106Xv2_cff import run2_nanoAOD_106Xv2
 
-from FWCore.ParameterSet.VarParsing import VarParsing
-options = VarParsing('analysis')
-options.parseArguments()
-
-process = cms.Process('NANO',Run2_2017,run2_nanoAOD_106Xv2)
+process = cms.Process('NANO',Run2_2016_HIPM,run2_nanoAOD_106Xv2)
 
 # import of standard configurations
 process.load('Configuration.StandardSequences.Services_cff')
@@ -26,17 +22,14 @@ process.load('PhysicsTools.NanoAOD.nano_cff')
 process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
-# Print log file every 1000 events
-process.MessageLogger.cerr.FwkReport.reportEvery = cms.untracked.int32(1000)
-
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(options.maxEvents),
-    output = cms.untracked.int32(options.maxEvents)
+    input = cms.untracked.int32(1435),
+    output = cms.untracked.int32(1435)
 )
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring(options.inputFiles),
+    fileNames = cms.untracked.vstring(),
     secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -74,7 +67,7 @@ process.options = cms.untracked.PSet(
 
 # Production Info
 process.configurationMetadata = cms.untracked.PSet(
-    annotation = cms.untracked.string('--eventcontent nevts:'+str(options.maxEvents)),
+    annotation = cms.untracked.string('--era nevts:1435'),
     name = cms.untracked.string('Applications'),
     version = cms.untracked.string('$Revision: 1.19 $')
 )
@@ -88,7 +81,7 @@ process.NANOAODSIMoutput = cms.OutputModule("NanoAODOutputModule",
         dataTier = cms.untracked.string('NANOAODSIM'),
         filterName = cms.untracked.string('')
     ),
-    fileName = cms.untracked.string(options.outputFile),
+    fileName = cms.untracked.string('file:EGM-RunIISummer20UL16NanoAODAPVv15-00001.root'),
     outputCommands = process.NANOAODSIMEventContent.outputCommands
 )
 
@@ -96,7 +89,7 @@ process.NANOAODSIMoutput = cms.OutputModule("NanoAODOutputModule",
 
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '150X_mc2017_realistic_v1', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '150X_mcRun2_asymptotic_preVFP_v1', '')
 
 # Path and EndPath definitions
 process.nanoAOD_step = cms.Path(process.nanoSequenceMC)
@@ -111,13 +104,13 @@ associatePatAlgosToolsTask(process)
 # customisation of the process.
 
 # Automatic addition of the customisation function from Configuration.DataProcessing.Utils
-from Configuration.DataProcessing.Utils import addMonitoring
+from Configuration.DataProcessing.Utils import addMonitoring 
 
 #call to customisation function addMonitoring imported from Configuration.DataProcessing.Utils
 process = addMonitoring(process)
 
 # Automatic addition of the customisation function from PhysicsTools.NanoAOD.nano_cff
-from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeCommon
+from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeCommon 
 
 #call to customisation function nanoAOD_customizeCommon imported from PhysicsTools.NanoAOD.nano_cff
 process = nanoAOD_customizeCommon(process)
