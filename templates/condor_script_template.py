@@ -112,14 +112,19 @@ InputRedirector=$8
 echo "i am here ${{PWD}}"
 basePath=${{PWD}}
 
-if [ -f "${{ConfigFile}}" ]; then
-  ResolvedConfigFile="${{ConfigFile}}"
-elif [ -f "HMuMu/${{ConfigFile}}" ]; then
-  ResolvedConfigFile="HMuMu/${{ConfigFile}}"
-elif [ -f "cmssw_modified_config_files/${{ConfigFile}}" ]; then
-  ResolvedConfigFile="cmssw_modified_config_files/${{ConfigFile}}"
-elif [ -f "cmssw_default_config_files/${{ConfigFile}}" ]; then
-  ResolvedConfigFile="cmssw_default_config_files/${{ConfigFile}}"
+JobWorkDir="/tmp/${{USER}}/custom_nanoaod_${{ClusterID}}_${{ProcID}}"
+mkdir -p "${{JobWorkDir}}"
+echo "Using isolated job work directory: ${{JobWorkDir}}"
+cd "${{JobWorkDir}}"
+
+if [ -f "${{basePath}}/${{ConfigFile}}" ]; then
+  ResolvedConfigFile="${{basePath}}/${{ConfigFile}}"
+elif [ -f "${{basePath}}/HMuMu/${{ConfigFile}}" ]; then
+  ResolvedConfigFile="${{basePath}}/HMuMu/${{ConfigFile}}"
+elif [ -f "${{basePath}}/cmssw_modified_config_files/${{ConfigFile}}" ]; then
+  ResolvedConfigFile="${{basePath}}/cmssw_modified_config_files/${{ConfigFile}}"
+elif [ -f "${{basePath}}/cmssw_default_config_files/${{ConfigFile}}" ]; then
+  ResolvedConfigFile="${{basePath}}/cmssw_default_config_files/${{ConfigFile}}"
 else
   echo "Error: could not locate config file ${{ConfigFile}}"
   exit 1
@@ -153,16 +158,16 @@ fi
 cd ${{JOB_CMSSW_RELEASE}}/src
 eval `scram runtime -sh`
 
-if [ -d ../../Configuration ]; then
-  mv ../../Configuration .
+if [ -d "${{basePath}}/Configuration" ] && [ ! -d Configuration ]; then
+  cp -r "${{basePath}}/Configuration" .
 fi
 
 scram b
-cd ../..
+cd "${{JobWorkDir}}"
 pwd
 
 echo "Running cmsRun ${{ResolvedConfigFile}} inputFiles=${{CmsRunInputFiles}} outputFile=${{OutputNanoAODFile}} maxEvents=${{maxEvents}}"
-cmsRun ${{ResolvedConfigFile}} inputFiles=${{CmsRunInputFiles}} outputFile=${{OutputNanoAODFile}} maxEvents=${{maxEvents}}
+cmsRun "${{ResolvedConfigFile}}" inputFiles=${{CmsRunInputFiles}} outputFile=${{OutputNanoAODFile}} maxEvents=${{maxEvents}}
 
 echo "cmsRun finished successfully"
 
@@ -184,6 +189,20 @@ echo "###################################################"
 
 echo "Remote output target: ${{OutputDir}}/${{OutputNanoAODFile}}"
 echo "###################################################"
+
+if [[ "${{OutputDir}}" =~ ^root://([^/]+)(/.*)$ ]]; then
+    OutputDirHost="root://${{BASH_REMATCH[1]}}"
+    OutputDirPath="${{BASH_REMATCH[2]}}"
+    RemoteOutputDir="${{OutputDirPath}}"
+    echo "Ensuring remote output directory exists: ${{OutputDirHost}} ${{RemoteOutputDir}}"
+    if command -v xrdfs >/dev/null 2>&1; then
+        if ! xrdfs "${{OutputDirHost}}" mkdir -p "${{RemoteOutputDir}}"; then
+            echo "Warning: xrdfs mkdir failed; continuing to xrdcp transfer attempt."
+        fi
+    else
+        echo "Warning: xrdfs is not available on this worker node; continuing to xrdcp transfer attempt."
+    fi
+fi
 
 # Check if the output file is created, then copy it; if not, try alternative file name patterns
 if [ -f "${{ActualOutputFile}}" ]; then
@@ -209,6 +228,9 @@ else
         ls -ltr
     fi
 fi
+
+cd "${{basePath}}"
+rm -rf "${{JobWorkDir}}"
 
 echo "Ending job on " `date`
 """
@@ -267,6 +289,14 @@ fi
 
 IFS=$'\t' read -r configFile inputMiniAOD outputDirectory outputFile nEvents CondorLogPath inputRedirector <<< "$line"
 mkdir -p "$CondorLogPath"
+
+task_stdout="${{CondorLogPath}}/payload_${{SLURM_ARRAY_JOB_ID:-0}}_${{SLURM_ARRAY_TASK_ID}}.stdout"
+task_stderr="${{CondorLogPath}}/payload_${{SLURM_ARRAY_JOB_ID:-0}}_${{SLURM_ARRAY_TASK_ID}}.stderr"
+exec > >(tee -a "$task_stdout")
+exec 2> >(tee -a "$task_stderr" >&2)
+
+echo "Redirecting payload stdout to $task_stdout"
+echo "Redirecting payload stderr to $task_stderr"
 
 bash "$payload_script" "${{SLURM_ARRAY_JOB_ID:-0}}" "$SLURM_ARRAY_TASK_ID" "$configFile" "$inputMiniAOD" "$outputDirectory" "$outputFile" "$nEvents" "$inputRedirector"
 """

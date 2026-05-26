@@ -310,7 +310,7 @@ def write_condor_jdl(output_prefix, condor_queue, transfer_config_files):
 
 def write_slurm_script(output_prefix, args, total_jobs):
     slurm_path = Path(f"{output_prefix}.sub")
-    top_log_directory = Path(args.TopLogDirectory).resolve()
+    top_log_directory = (Path(args.TopLogDirectory) / args.year).resolve()
     top_log_directory.mkdir(parents=True, exist_ok=True)
     workdir = Path.cwd().resolve()
     manifest_path = (workdir / f"{output_prefix}.txt").resolve()

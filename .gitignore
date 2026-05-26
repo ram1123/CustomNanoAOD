@@ -1,4 +1,9 @@
 CMSSW_*/
+*.stderr
+*.stdout
+*_test.sh
+*.xml
+*.js
 *.log
 x509*
 *.csv
